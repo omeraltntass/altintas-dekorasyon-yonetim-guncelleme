@@ -1,8 +1,7 @@
 # Web sürümünü yayınlar: gh-pages dalındaki derlenmiş dosyaları GitHub Pages'e yükler.
 name: Web sürümünü yayınla
+# gh-pages dalına dosyalar yüklendikten sonra elle (veya API ile) başlatılır.
 on:
-  push:
-    branches: [gh-pages]
   workflow_dispatch:
 permissions:
   contents: read
