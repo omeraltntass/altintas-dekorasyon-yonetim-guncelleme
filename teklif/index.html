@@ -1,0 +1,960 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' data: blob:"><script src="kopru.js"></script></head><body>
+<title>Altıntaş Teklif</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="fonts/fonts.css">
+<script src="lib/html2pdf.bundle.min.js"></script>
+<style>
+/* Layout: koyu petrol kenar çubuğu + çalışma alanı; editörde ana sütun ve yapışkan fiyat paneli; belge her zaman beyaz A4 */
+:root{
+  --bg:#f5f6f7; --surface:#ffffff; --sunken:#f9fafb; --ink:#1c232b; --muted:#5f6873; --line:#e2e5e9;
+  --brand:#1c2733; --brand-ink:#eef1f4; --accent:#2e4a66; --accent-soft:#edf1f5; --gold:#b08326; --gold-soft:#f6efe0;
+  --ok:#2c7a4b; --warn:#b06d12; --bad:#b23b31; --info:#2d5f8f;
+  --f-ui:"Source Sans 3","Segoe UI",system-ui,sans-serif; --f-head:"Montserrat",system-ui,sans-serif; --f-logo:"Montserrat",system-ui,sans-serif; --w-head:600; --w-logo:700;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#111418; --surface:#1a1f25; --sunken:#15191e; --ink:#e4e7eb; --muted:#9aa3ad; --line:#2b323a;
+  --brand:#0d1014; --brand-ink:#e4e7eb; --accent:#9db7d1; --accent-soft:#1f2933; --gold:#d9ab47; --gold-soft:#2a241a;
+  --ok:#69c290; --warn:#e3a24a; --bad:#ee7d72; --info:#83b3e6; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111418; --surface:#1a1f25; --sunken:#15191e; --ink:#e4e7eb; --muted:#9aa3ad; --line:#2b323a;
+  --brand:#0d1014; --brand-ink:#e4e7eb; --accent:#9db7d1; --accent-soft:#1f2933; --gold:#d9ab47; --gold-soft:#2a241a;
+  --ok:#69c290; --warn:#e3a24a; --bad:#ee7d72; --info:#83b3e6; color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font:14px/1.5 var(--f-ui);margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.shell{display:grid;grid-template-columns:232px 1fr;min-height:100%}
+.side{background:var(--brand);color:var(--brand-ink);padding-block:22px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:16px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh}
+.side .brand{margin:0 4px 22px}
+.side nav{display:grid;gap:2px}
+.side nav button{all:unset;cursor:pointer;padding:9px 12px;border-radius:8px;opacity:.78;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+.side nav button:hover{opacity:1;background:rgba(255,255,255,.06)}
+.side nav button.on{opacity:1;background:rgba(255,255,255,.12)}
+.side nav button:focus-visible{outline:2px solid var(--accent)}
+.side nav .cnt{font-size:11px;opacity:.7}
+.side .foot{margin-top:auto;font-size:11.5px;opacity:.6;padding:0 6px}
+.main{min-width:0;padding-block:24px 64px;padding-left:28px;padding-right:max(28px,env(safe-area-inset-right,0px))}
+
+.brandlogo{display:flex;align-items:center;gap:10px}
+.brandlogo img{width:40px;height:40px;flex:none}
+.brandlogo .w{display:grid;line-height:1}
+.brandlogo .w b{font:var(--w-logo) 19px var(--f-logo);letter-spacing:.12em}
+.brandlogo .w i{font:700 8.5px var(--f-ui);font-style:normal;letter-spacing:.42em;color:var(--gold);margin-top:5px}
+
+.top{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:18px}
+.top h1{margin:0;font:var(--w-head) 26px/1.2 var(--f-head);letter-spacing:.02em}
+.top .grow{flex:1;min-width:0}
+.sub{color:var(--muted);font-size:13px}
+.btn{cursor:pointer;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 14px;font-weight:600;font-size:13px;display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.btn.pri:hover{filter:brightness(1.05)}
+.btn.dark{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+.btn.ghost:hover{color:var(--ink);border-color:var(--line)}
+.btn.danger{color:var(--bad)}
+.btn.sm{padding:5px 10px;font-size:12px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.icon{cursor:pointer;border:none;background:none;color:var(--muted);width:28px;height:28px;border-radius:6px;display:inline-grid;place-items:center;font-size:14px}
+.icon:hover{background:var(--sunken);color:var(--ink)}
+.icon.del:hover{color:var(--bad)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px;display:grid;gap:14px}
+.card > h2{margin:0;font:700 15px var(--f-ui);display:flex;align-items:center;gap:10px}
+.card > h2 small{font-weight:500;color:var(--muted);font-size:12.5px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.fld{display:grid;gap:4px;min-width:0}
+.fld > span{font-size:11.5px;font-weight:600;color:var(--muted);letter-spacing:.02em}
+input[type=text],input[type=date],input[type=number],input[type=email],select,textarea{width:100%;background:var(--sunken);border:1px solid var(--line);border-radius:7px;padding:7px 10px;min-width:0}
+textarea{resize:vertical;line-height:1.45}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);background:var(--surface)}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.kpi small{display:block;color:var(--muted);font-size:12px;font-weight:600}
+.kpi b{font:700 22px var(--f-ui);font-variant-numeric:tabular-nums}
+.tablewrap{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow-x:auto}
+table.list{width:100%;border-collapse:collapse;min-width:720px}
+table.list th{text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:11px 14px;border-bottom:1px solid var(--line);font-weight:700}
+table.list td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.list tr:last-child td{border-bottom:none}
+table.list tbody tr{cursor:pointer}
+table.list tbody tr:hover td{background:var(--sunken)}
+.mono{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+.r{text-align:right}
+.pill{display:inline-block;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
+.st-Taslak{color:var(--muted)}.st-Gönderildi{color:var(--info)}.st-Revizyon{color:var(--warn)}.st-Onaylandı{color:var(--ok)}.st-Reddedildi{color:var(--bad)}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.toolbar input{max-width:280px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{cursor:pointer;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 11px;font-size:12.5px;font-weight:600;color:var(--muted)}
+.chip:hover,.chip.on{border-color:var(--accent);color:var(--ink)}
+.chip.on{background:var(--accent-soft)}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:12px;padding:40px 24px;display:grid;gap:10px;justify-items:center;text-align:center;color:var(--muted)}
+.empty b{color:var(--ink);font-size:16px}
+.empty img{width:56px;opacity:.9}
+
+/* editor */
+.ed{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start}
+.ed-main{display:grid;gap:16px;min-width:0}
+.aside{position:sticky;top:16px;display:grid;gap:14px}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--sunken)}
+.seg button{all:unset;cursor:pointer;text-align:center;padding:7px 4px;font-size:12px;font-weight:600;color:var(--muted)}
+.seg button.on{background:var(--brand);color:var(--brand-ink)}
+.seg button:focus-visible{outline:2px solid var(--accent)}
+.hint{font-size:12px;color:var(--muted)}
+.warnbox{font-size:12.5px;border-radius:8px;padding:8px 10px;background:var(--accent-soft);color:var(--ink);border:1px solid var(--accent)}
+.okbox{font-size:12.5px;color:var(--ok);font-weight:600}
+.badbox{font-size:12.5px;color:var(--bad);font-weight:600}
+.tl{display:flex;justify-content:space-between;gap:10px;font-size:13px}
+.tl span:last-child{font-variant-numeric:tabular-nums;font-weight:600}
+.tl.big{font-size:17px;font-weight:800;border-top:1px solid var(--line);padding-top:10px}
+.tl.big span:first-child{font-weight:700;font-size:13px;align-self:center}
+.yazi{font-size:11.5px;color:var(--muted);font-style:italic}
+
+.bolum{border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden}
+.bh{display:flex;gap:10px;align-items:center;padding:10px 12px;background:var(--sunken);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.bh .bn{font:var(--w-head) 20px var(--f-head);color:var(--accent);width:34px;text-align:center}
+.bh input.bname{flex:1 1 200px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;background:transparent;border-color:transparent}
+.bh input.bname:hover{border-color:var(--line)}
+.bh .btot{font-weight:700;font-variant-numeric:tabular-nums;min-width:120px;text-align:right}
+.bh .bgot{width:150px}
+.maddeler{display:grid}
+.madde{display:grid;grid-template-columns:40px minmax(0,1fr) 300px auto;gap:8px 12px;padding:12px;border-bottom:1px solid var(--line);align-items:start}
+.madde .mn{font-weight:800;color:var(--accent);padding-top:7px;font-variant-numeric:tabular-nums}
+.madde .mtext{display:grid;gap:6px;min-width:0}
+.madde .mtext input.mtitle{font-weight:700}
+.madde .mprice{display:grid;grid-template-columns:70px 78px 1fr;gap:6px;align-content:start}
+.madde .mprice .mtut{grid-column:1/-1;text-align:right;font-weight:700;font-variant-numeric:tabular-nums;font-size:13px;padding-top:2px}
+.madde .mctl{display:grid;gap:2px}
+.badd{display:flex;gap:8px;padding:10px 12px;flex-wrap:wrap}
+.addsec{display:grid;gap:10px}
+.addsec .row{display:flex;gap:8px}
+.addsec .row input{max-width:340px}
+.cond{display:grid;gap:6px}
+.cond label{display:flex;gap:8px;align-items:flex-start;font-size:13.5px}
+.cond label input{margin-top:3px}
+.cond label .t{flex:1}
+.payrow{display:grid;grid-template-columns:90px 1fr 140px 28px;gap:8px;align-items:center}
+.payrow .amt{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:13px}
+.savestate{font-size:12px;color:var(--muted)}
+.opts{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.opts select{width:auto;max-width:100%;background:var(--accent-soft);border-color:var(--accent);font-weight:600;font-size:12.5px;padding:4px 8px}
+.madde .mprice .cost{grid-column:1/-1}
+.madde .mprice .cost input{background:var(--accent-soft)}
+.madde .mprice .mkar{grid-column:1/-1;text-align:right;font-size:11.5px;color:var(--muted)}
+.costcard{border-color:var(--accent)}
+.kar-ok{color:var(--ok)}.kar-low{color:var(--warn)}.kar-bad{color:var(--bad)}
+.filebtn{position:relative;overflow:hidden}
+.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.banner{background:var(--accent-soft);border:1px solid var(--accent);border-radius:10px;padding:10px 14px;font-size:13px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.vers{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12.5px}
+
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(10,18,20,.55);display:grid;place-items:center;padding:20px;z-index:50}
+.modal .box{background:var(--surface);border-radius:14px;width:min(760px,100%);max-height:86vh;display:grid;grid-template-rows:auto auto 1fr;overflow:hidden;border:1px solid var(--line)}
+.modal .mh{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
+.modal .mh h3{margin:0;font:var(--w-head) 20px var(--f-head)}
+.modal .ms{padding:12px 18px;display:grid;gap:10px;border-bottom:1px solid var(--line)}
+.modal .ml{overflow:auto;padding:8px 10px}
+.libitem{all:unset;cursor:pointer;display:grid;gap:3px;padding:10px 10px;border-radius:8px;width:100%;box-sizing:border-box}
+.libitem:hover,.libitem:focus-visible{background:var(--sunken)}
+.libitem b{font-size:13.5px}
+.libitem span{font-size:12.5px;color:var(--muted)}
+.libgroup{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);padding:10px 10px 4px}
+
+/* library & settings */
+.libtable .madde{grid-template-columns:150px minmax(0,1fr) 220px auto}
+.clause{display:grid;grid-template-columns:44px 1fr auto;gap:8px;align-items:start;padding:10px 0;border-bottom:1px solid var(--line)}
+.clause .cn{font:var(--w-head) 18px var(--f-head);color:var(--accent);padding-top:4px}
+.clause .cb{display:grid;gap:6px}
+code.ph{font-size:11.5px;background:var(--sunken);border:1px solid var(--line);border-radius:4px;padding:1px 5px;cursor:pointer}
+
+/* toast */
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--brand);color:var(--brand-ink);padding:10px 16px;border-radius:10px;font-weight:600;font-size:13px;z-index:60;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+
+/* document (always paper) */
+.paperwrap{overflow-x:auto;padding:8px 0 24px}
+.doc{width:794px;margin:0 auto;background:#fff;color:#1c232b;font:12px/1.55 var(--f-ui);padding:56px 60px 48px;box-shadow:0 10px 40px rgba(20,28,38,.12);border-radius:2px}
+.doc *{color:inherit}
+.d-head{display:flex;justify-content:space-between;align-items:flex-start;gap:24px}
+.d-head .brandlogo img{width:58px;height:58px}
+.d-head .brandlogo .w b{font-size:27px;color:#1c2733}
+.d-head .brandlogo .w i{font-size:10px;color:#b08326}
+.d-type{text-align:right}
+.d-type .t{font:var(--w-head) 30px/1 var(--f-head);letter-spacing:.14em;color:#1c2733}
+.d-type dl{display:grid;grid-template-columns:auto auto;gap:2px 14px;margin:12px 0 0;font-size:11px;justify-content:end}
+.d-type dt{color:#6b7480;text-align:right}
+.d-type dd{margin:0;font-weight:700;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.d-rule{height:2px;background:linear-gradient(90deg,#b08326 0 64px,#1c2733 64px);margin:22px 0 22px}
+.d-parties{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.d-parties small{display:block;font-size:9.5px;font-weight:800;letter-spacing:.16em;color:#6b7480;margin-bottom:4px}
+.d-parties b{display:block;font-size:14px;color:#1c2733}
+.d-parties span{display:block;color:#4d5661}
+.d-intro{margin:22px 0 8px;color:#343d47}
+.d-sec{margin-top:22px}
+.d-sec-h{display:flex;align-items:baseline;gap:12px;border-bottom:1px solid #dde1e5;padding-bottom:6px;margin-bottom:4px}
+.d-sec-n{font:var(--w-head) 22px/1 var(--f-head);color:#6b7480;min-width:30px}
+.d-sec-h h3{margin:0;font:800 12.5px var(--f-ui);letter-spacing:.12em;text-transform:uppercase;color:#1c2733;flex:1}
+.d-madde{display:grid;grid-template-columns:30px 1fr auto;gap:12px;padding:9px 0;border-bottom:1px dotted #dde1e5}
+.d-madde .n{font-weight:800;color:#6b7480;font-variant-numeric:tabular-nums}
+.d-madde b{display:block;color:#1c2733;font-size:12.5px}
+.d-madde p{margin:2px 0 0;color:#3a434d}
+.d-madde .note{font-style:italic;color:#6b7480;font-size:11px}
+.d-ma{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.d-ma span{display:block;color:#6b7480;font-size:10.5px}
+.d-ma b{font-size:12.5px}
+.d-sec-t{display:flex;justify-content:flex-end;gap:18px;padding:8px 0 0;font-weight:700;color:#1c2733;font-variant-numeric:tabular-nums}
+.d-sec-t span{color:#6b7480;font-weight:600}
+.d-sum{margin:28px 0 0 auto;width:330px;border:1px solid #1c2733;padding:14px 16px;display:grid;gap:5px}
+.d-sum .l{display:flex;justify-content:space-between;gap:12px;font-variant-numeric:tabular-nums}
+.d-sum .l span:first-child{color:#4d5661}
+.d-sum .g{border-top:1px solid #1c2733;margin-top:6px;padding-top:8px;font-weight:800;font-size:15px;color:#1c2733}
+.d-sum .g span:first-child{color:#1c2733;font-size:11px;letter-spacing:.08em;align-self:center}
+.d-sum .yz{font-size:10.5px;color:#6b7480;font-style:italic;text-align:right}
+.d-cond{margin-top:26px;display:grid;grid-template-columns:1fr;gap:28px}
+.d-cond h4{margin:0 0 6px;font-size:9.5px;font-weight:800;letter-spacing:.16em;color:#6b7480}
+.d-cond ol{margin:0;padding-left:16px;color:#3a434d;display:grid;gap:3px}
+.d-cond table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.d-cond td{padding:4px 0;border-bottom:1px dotted #dde1e5;color:#3a434d}
+.d-sign{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:40px}
+.d-sign div{border-top:1px solid #1c2733;padding-top:8px;font-size:11px;color:#4d5661;min-height:70px}
+.d-sign b{display:block;color:#1c2733;font-size:12px}
+.d-contact{display:flex;flex-wrap:wrap;gap:2px 14px;margin-top:10px;font-size:10px;color:#4d5661}
+.d-contact span{white-space:nowrap}
+.d-contact b{color:#6b7480;font-weight:800;font-size:8.5px;letter-spacing:.12em;margin-right:4px}
+.d-slogan{font-size:10px;color:#6b7480;letter-spacing:.04em;margin-top:6px}
+.d-foot{margin-top:36px;border-top:2px solid #1c2733;position:relative;padding-top:12px;display:grid;gap:10px}
+.d-foot::before{content:"";position:absolute;left:0;top:-2px;width:64px;height:2px;background:#b08326}
+.d-foot .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px 22px}
+.d-foot .col{display:grid;gap:1px;align-content:start;font-size:9.5px;color:#3a434d;line-height:1.45}
+.d-foot .col small{font-size:8px;font-weight:800;letter-spacing:.16em;color:#6b7480;margin-bottom:2px}
+.d-foot .legal{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 14px;font-size:8.5px;color:#6b7480;border-top:1px solid #e6e9ec;padding-top:6px}
+.d-foot.pdf{margin-top:0}
+.d-runhead{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #dde1e5;padding-bottom:6px;font-size:9.5px;color:#6b7480}
+.d-runhead .brandlogo img{width:26px;height:26px}
+.d-runhead .brandlogo .w b{font-size:13px;color:#1c2733}
+.d-runhead .brandlogo .w i{font-size:6px;margin-top:3px;color:#b08326}
+.hfprev{background:#fff;border:1px solid var(--line);border-radius:10px;overflow-x:auto;padding:16px}
+.hfprev .doc{box-shadow:none;padding:24px 28px;width:760px}
+.d-title{text-align:center;margin:6px 0 4px}
+.d-title h2{margin:0;font:var(--w-head) 21px var(--f-head);letter-spacing:.08em;color:#1c2733}
+.d-cl{margin-top:14px}
+.d-cl h4{margin:0 0 4px;font-size:11.5px;font-weight:800;color:#1c2733;letter-spacing:.04em}
+.d-cl p{margin:0;color:#343d47;text-align:justify}
+.d-ek{margin-top:30px}
+.d-ek > h3{font:var(--w-head) 17px var(--f-head);letter-spacing:.06em;color:#1c2733;margin:0 0 4px;border-bottom:2px solid #b08326;padding-bottom:6px}
+.d-pay{width:100%;border-collapse:collapse;margin-top:8px;font-variant-numeric:tabular-nums}
+.d-pay th{text-align:left;font-size:9.5px;letter-spacing:.12em;color:#6b7480;border-bottom:1px solid #1c2733;padding:6px 4px}
+.d-pay td{padding:7px 4px;border-bottom:1px dotted #dde1e5}
+.d-pay tfoot td{font-weight:800;border-bottom:none;border-top:1px solid #1c2733}
+.pb{break-before:page;page-break-before:always}
+.miss{background:#fde9b8;padding:0 3px;border-radius:2px}
+
+@media (max-width:1100px){.ed{grid-template-columns:1fr}.aside{position:static}}
+@media (max-width:820px){
+  .shell{grid-template-columns:1fr}
+  .side{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;padding-block:12px;padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .side .brand{margin:0 12px 0 0}
+  .side nav{display:flex;flex-wrap:wrap}
+  .side .foot{display:none}
+  .main{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .madde{grid-template-columns:32px minmax(0,1fr) auto}
+  .madde .mprice{grid-column:2/3}
+  .libtable .madde{grid-template-columns:1fr auto}
+  .payrow{grid-template-columns:70px 1fr 28px}
+  .payrow .amt{grid-column:2/3;text-align:left}
+  .top h1{font-size:21px}
+  .top .grow{flex-basis:100%;order:-1}
+}
+@media (prefers-reduced-motion:no-preference){.btn,.chip{transition:border-color .12s,background .12s}}
+</style>
+
+<div id="app"><div class="main" style="padding:40px">Yükleniyor…</div></div>
+
+<script>
+(function(){
+"use strict";
+/* ---------- yardımcılar ---------- */
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
+const fmt = new Intl.NumberFormat("tr-TR", {minimumFractionDigits:2, maximumFractionDigits:2});
+const money = n => fmt.format(Math.round((n || 0) * 100) / 100) + " ₺";
+const num = v => { if (typeof v === "number") return isFinite(v) ? v : 0; let s = String(v ?? "").trim().replace(/\s|₺/g, ""); if (s.includes(",")) s = s.replace(/\./g, "").replace(",", "."); else if ((s.match(/\./g) || []).length > 1 || /\.\d{3}$/.test(s)) s = s.replace(/\./g, ""); const n = parseFloat(s); return isNaN(n) ? 0 : n; };
+const numIn = n => n ? String(n).replace(".", ",") : "";
+const today = () => new Date().toISOString().slice(0, 10);
+const trDate = iso => { if (!iso) return ""; const [y, m, d] = iso.split("-"); return d + "." + m + "." + y; };
+const addDays = (iso, n) => { const d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+const clone = o => JSON.parse(JSON.stringify(o));
+const two = n => String(n).padStart(2, "0");
+
+function yaziyla(amount){
+  const ones = ["","bir","iki","üç","dört","beş","altı","yedi","sekiz","dokuz"];
+  const tens = ["","on","yirmi","otuz","kırk","elli","altmış","yetmiş","seksen","doksan"];
+  const groups = ["","bin","milyon","milyar","trilyon"];
+  const three = n => { const h = Math.floor(n / 100), t = Math.floor(n % 100 / 10), o = n % 10; return (h ? (h > 1 ? ones[h] : "") + "yüz" : "") + tens[t] + ones[o]; };
+  amount = Math.round((amount || 0) * 100) / 100;
+  let lira = Math.floor(amount), kurus = Math.round((amount - lira) * 100);
+  if (lira === 0 && kurus === 0) return "sıfır Türk Lirası";
+  let out = "", i = 0;
+  while (lira > 0){ const g = lira % 1000; if (g){ const w = (i === 1 && g === 1) ? "" : three(g); out = w + groups[i] + out; } lira = Math.floor(lira / 1000); i++; }
+  let s = (out || "sıfır") + " Türk Lirası";
+  if (kurus) s += " " + three(kurus) + " Kuruş";
+  return s;
+}
+
+/* ---------- logo ---------- */
+function markSVG(ink, gold){
+  // Altın A işareti: iki yüzlü bacaklar ve kesen kavis
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="m1" x1="0" y1="0" x2="0.6" y2="1"><stop offset="0" stop-color="#fbe7a6"/><stop offset=".5" stop-color="#e2b552"/><stop offset="1" stop-color="#b8862d"/></linearGradient><linearGradient id="m2" x1="0" y1="0" x2="0.6" y2="1"><stop offset="0" stop-color="#c9973a"/><stop offset=".6" stop-color="#9c6d22"/><stop offset="1" stop-color="#7a5418"/></linearGradient><linearGradient id="m3" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#a87726"/><stop offset=".45" stop-color="#f8e0a0"/><stop offset="1" stop-color="#d1a03f"/></linearGradient><linearGradient id="m4" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#7a5418"/><stop offset=".5" stop-color="#b8862d"/><stop offset="1" stop-color="#8f6420"/></linearGradient></defs><path d="M32 5L6 58h4.5L32 14z" fill="url(#m1)"/><path d="M32 14L10.5 58H15L32 23z" fill="url(#m2)"/><path d="M32 5l12.75 26-3.55 1.8L32 14z" fill="url(#m1)"/><path d="M32 14l9.2 18.8-3.6 1.8L32 23z" fill="url(#m2)"/><path d="M48.7 39L58 58h-4.5l-8.4-17.25z" fill="url(#m2)"/><path d="M45.1 40.75L53.5 58H49l-7.5-15.5z" fill="url(#m1)"/><path d="M12.5 57.5Q29 33.5 62 29Q35 44 12.5 57.5z" fill="url(#m4)"/><path d="M12.5 57.5Q29 33.5 62 29Q33 41 12.5 57.5z" fill="url(#m3)"/></svg>';
+}
+const markURI = (ink, gold) => "data:image/svg+xml;charset=utf-8," + encodeURIComponent(markSVG(ink, gold));
+const MARK_DOC = markURI("#1c2733", "#b08326");
+function logoHTML(onDark){
+  const src = onDark ? markURI("#eef1f4", "#c9a76f") : MARK_DOC;
+  return '<div class="brandlogo"><img src="'+src+'" alt=""><div class="w"><b>ALTINTAŞ</b><i>DEKORASYON</i></div></div>';
+}
+
+/* ---------- varsayılanlar (Excel'den bağımsız) ---------- */
+const BIRIMLER = ["gtr","adet","m²","mtül","m³","takım","kg","set"];
+const DURUMLAR = ["Taslak","Gönderildi","Revizyon istendi","Onaylandı","Reddedildi"];
+const BOLUM_ONERI = ["Yıkım ve hazırlık","Tesisat","Elektrik","Duvar ve tavan","Zemin","Mutfak","Banyo ve WC","Salon","Yatak odası","Mobilya ve dolap","Kapı ve pencere","Aydınlatma","Genel giderler"];
+const DEFAULT_KOSULLAR = [
+  "Fiyatlarımıza KDV dahil değildir.",
+  "Teklifte yazılı olmayan malzeme, aksesuar ve işler kapsam dışıdır.",
+  "Renk, model ve numune seçimleri iş başlamadan önce yazılı olarak onaylanır.",
+  "Teklif, geçerlilik süresi içinde onaylanması halinde bağlayıcıdır."
+];
+const DEFAULT_ODEME = [{oran:40, aciklama:"Sözleşme imzasında"},{oran:40, aciklama:"Kaba işler tamamlandığında"},{oran:20, aciklama:"Teslimde"}];
+const DEFAULT_MADDELER = [
+  {baslik:"Sözleşmenin konusu", metin:"Bu sözleşmenin konusu, İşveren'e ait {IS_ADRESI} adresindeki mekânda, {TEKLIF_NO} numaralı onaylı teklifte ve bu sözleşmenin eki olan Ek-1 İş Kapsamı'nda tanımlanan tadilat ve dekorasyon işlerinin Yüklenici tarafından yapılmasıdır."},
+  {baslik:"Kapsam ve ekler", metin:"İşin kapsamı Ek-1 ile sınırlıdır. Ek-1'de yer almayan iş, malzeme ve aksesuarlar sözleşme kapsamı dışındadır. Ek-1 İş Kapsamı ve Ek-2 Ödeme Takvimi bu sözleşmenin ayrılmaz parçasıdır; aralarında çelişki olması halinde sözleşme metni esas alınır."},
+  {baslik:"Süre ve teslim", metin:"İşe başlama tarihi {BASLAMA}, planlanan teslim tarihi {TESLIM} olarak belirlenmiştir. Süre; mekânın boş ve çalışmaya hazır teslim edilmesi, seçimlerin zamanında onaylanması ve ödemelerin takvime uygun yapılması koşuluyla işler. İşveren kaynaklı gecikmeler ve mücbir sebepler süreye eklenir."},
+  {baslik:"Sözleşme bedeli", metin:"Sözleşme bedeli {BEDEL} ({BEDEL_YAZI}) olup {KDV_DURUMU}."},
+  {baslik:"Ödeme", metin:"Ödemeler Ek-2 Ödeme Takvimi'ne göre yapılır. Ödemenin gecikmesi halinde Yüklenici, gecikme süresince işi durdurma hakkına sahiptir; bu süre teslim tarihine eklenir."},
+  {baslik:"Malzeme ve seçimler", metin:"Renk, desen, marka ve model seçimleri İşveren'in yazılı onayıyla kesinleşir. Doğal malzemelerde ve üretim partileri arasında görülen, standart tolerans içindeki ton ve desen farklılıkları ayıp sayılmaz."},
+  {baslik:"Değişiklik ve ilave işler", metin:"Ek-1 dışındaki her talep ilave iştir. İlave işler, bedeli ve süreye etkisi yazılı olarak kararlaştırıldıktan sonra yapılır ve ek protokol ile sözleşmeye eklenir."},
+  {baslik:"Teslim ve kabul", metin:"İşin tamamlanmasının ardından taraflar birlikte kontrol yapar. Tespit edilen eksikler bir tutanağa yazılır ve Yüklenici tarafından makul sürede giderilir."},
+  {baslik:"Garanti", metin:"Yüklenici, kendi işçiliğinden kaynaklanan kusurlara karşı teslim tarihinden itibaren {GARANTI} garanti verir. Malzeme ve cihazlar üretici veya ithalatçı garantisine tabidir. Kullanım hatası ve dış etkenlerden doğan hasarlar garanti dışıdır."},
+  {baslik:"Fesih", metin:"Taraflardan biri yükümlülüklerini yerine getirmezse diğer taraf yazılı bildirimde bulunur. Aykırılık bildirimden itibaren 10 gün içinde giderilmezse sözleşme feshedilebilir. Fesih halinde yapılmış işler ve temin edilmiş malzemeler hesaplanarak taraflar arasında mahsuplaşılır."},
+  {baslik:"Mücbir sebep", metin:"Doğal afet, salgın, resmi kararlar ve tarafların kontrolü dışındaki benzeri olaylar mücbir sebep sayılır. Bu süre boyunca taraflar yükümlülüklerinden sorumlu tutulmaz ve iş süresi uzar."},
+  {baslik:"Uyuşmazlıklar", metin:"Uyuşmazlıklarda öncelikle uzlaşma yolu denenir. Çözülemeyen uyuşmazlıklarda {MAHKEME} Mahkemeleri ve İcra Daireleri yetkilidir. İşveren'in tüketici olduğu hallerde tüketici mevzuatının zorunlu hükümleri saklıdır."},
+  {baslik:"Yürürlük", metin:"İki nüsha olarak düzenlenen bu sözleşme, taraflarca imzalandığı tarihte yürürlüğe girer."}
+];
+const PLACEHOLDERS = ["{IS_ADRESI}","{TEKLIF_NO}","{BASLAMA}","{TESLIM}","{BEDEL}","{BEDEL_YAZI}","{KDV_DURUMU}","{GARANTI}","{MAHKEME}","{MUSTERI}","{FIRMA}"];
+const DEFAULT_AYAR = {
+  firma:{ad:"Altıntaş Dekorasyon", unvan:"", slogan:"İç mimari · Tadilat · Dekorasyon", yetkili:"", showroomAdres:"", showroomTel:"", fabrikaAdres:"", fabrikaTel:"", gsm:"", eposta:"", web:"", instagram:"", vergiDairesi:"", vergiNo:"", banka:"", iban:"", mahkeme:"", garanti:"2 (iki) yıl"},
+  teklif:{gecerlilik:15, kdv:20, giris:"Talebiniz doğrultusunda hazırladığımız teklifimizi bilgilerinize sunar, iyi çalışmalar dileriz.", kosullar:DEFAULT_KOSULLAR.join("\n")},
+  sozlesmeMaddeleri: DEFAULT_MADDELER
+};
+
+/* ---------- veri katmanı ---------- */
+const store = {
+  db:null, mode:"local",
+  async init(){
+    try { if (window.claude && window.claude.use) this.db = await window.claude.use("db"); } catch(e){ this.db = null; }
+    this.mode = this.db ? "db" : "local";
+  },
+  lsGet(col){ try { return JSON.parse(localStorage.getItem("altintas_" + col) || "[]"); } catch(e){ return []; } },
+  lsSet(col, arr){ try { localStorage.setItem("altintas_" + col, JSON.stringify(arr)); } catch(e){} },
+  async list(col){
+    if (this.db){ const snap = await this.db.collection(col).get(); return snap.docs.map(d => Object.assign(clone(d.data() || {}), {id:d.id})); }
+    return this.lsGet(col);
+  },
+  async put(col, obj){
+    const body = clone(obj); const id = body.id; delete body.id;
+    if (this.db){ await this.db.collection(col).doc(id).set(body); return; }
+    const arr = this.lsGet(col); const i = arr.findIndex(x => x.id === id); const rec = Object.assign(body, {id});
+    if (i >= 0) arr[i] = rec; else arr.push(rec); this.lsSet(col, arr);
+  },
+  async del(col, id){
+    if (this.db){ await this.db.collection(col).doc(id).delete(); return; }
+    this.lsSet(col, this.lsGet(col).filter(x => x.id !== id));
+  }
+};
+
+/* ---------- durum ---------- */
+let showCostPref = false; try { showCostPref = localStorage.getItem("altintas_showCost") === "1"; } catch(e){}
+const S = { showCost:showCostPref, view:"list", teklifler:[], kutuphane:[], ayar:clone(DEFAULT_AYAR), curId:null, filter:"Tümü", q:"", libTarget:null, libQ:"", libGrup:"Tümü", saving:"", loaded:false, dl:undefined };
+const cur = () => S.teklifler.find(t => t.id === S.curId);
+
+function mergeAyar(a){
+  const d = clone(DEFAULT_AYAR); if (!a) return d;
+  const fa = Object.assign({}, a.firma || {});
+  if (fa.adres && !fa.showroomAdres) fa.showroomAdres = fa.adres;
+  if (fa.telefon && !fa.showroomTel) fa.showroomTel = fa.telefon;
+  return { firma:Object.assign(d.firma, fa), teklif:Object.assign(d.teklif, a.teklif || {}), sozlesmeMaddeleri:(a.sozlesmeMaddeleri && a.sozlesmeMaddeleri.length) ? a.sozlesmeMaddeleri : d.sozlesmeMaddeleri };
+}
+
+/* ---------- hesaplar ---------- */
+const maddeTutar = m => num(m.miktar) * num(m.birimFiyat);
+const bolumHesap = b => (b.maddeler || []).reduce((s, m) => s + maddeTutar(m), 0);
+const bolumToplam = b => num(b.goturu) > 0 ? num(b.goturu) : bolumHesap(b);
+const maddeMaliyet = m => num(m.miktar) * num(m.birimMaliyet);
+const bolumMaliyet = b => num(b.goturuMaliyet) > 0 ? num(b.goturuMaliyet) : (b.maddeler || []).reduce((s, m) => s + maddeMaliyet(m), 0);
+function calc(t){
+  const kalem = (t.bolumler || []).reduce((s, b) => s + bolumToplam(b), 0);
+  const ara = num(t.genelGoturu) > 0 ? num(t.genelGoturu) : kalem;
+  const iskonto = num(t.iskonto);
+  const matrah = Math.max(0, ara - iskonto);
+  const kdv = matrah * num(t.kdvOran) / 100;
+  const maliyet = (t.bolumler || []).reduce((s, b) => s + bolumMaliyet(b), 0);
+  const kar = matrah - maliyet;
+  return {kalem, ara, iskonto, matrah, kdv, dahil:matrah + kdv, odemeBaz: t.kdvGoster === "dahil" ? matrah + kdv : matrah, maliyet, kar, marj: matrah > 0 ? kar / matrah * 100 : 0};
+}
+
+/* ---------- akıllı madde ---------- */
+const OPT_RE = /\[([^\[\]]*\|[^\[\]]*)\]/g;
+const optGroups = txt => { const g = []; String(txt || "").replace(OPT_RE, (m, inner) => { g.push(inner.split("|").map(x => x.trim()).filter(Boolean)); return m; }); return g; };
+function fillOpts(sablon, secimler){ let i = 0; return String(sablon || "").replace(OPT_RE, (m, inner) => { const opts = inner.split("|").map(x => x.trim()).filter(Boolean); const v = secimler && secimler[i] != null ? secimler[i] : opts[0]; i++; return v; }); }
+function secimHTML(m, p){
+  if (!m.sablon) return "";
+  const g = optGroups(m.sablon); if (!g.length) return "";
+  return '<div class="opts">'+g.map((opts, i) => '<select data-k="'+p+'secimler.'+i+'" aria-label="Seçenek '+(i+1)+'">'+opts.map(o => '<option'+((m.secimler||[])[i]===o?" selected":"")+'>'+esc(o)+'</option>').join("")+'</select>').join("")+'<span class="hint">Seçenekli madde: seçim değişince açıklama güncellenir.</span></div>';
+}
+
+/* ---------- teklif oluşturma ---------- */
+function nextNo(prefix, list, key){
+  const y = new Date().getFullYear(); const p = prefix + "-" + y + "-";
+  let max = 0; list.forEach(x => { const v = key(x); if (v && v.startsWith(p)) max = Math.max(max, parseInt(v.slice(p.length), 10) || 0); });
+  return p + String(max + 1).padStart(prefix === "ALT" ? 4 : 3, "0");
+}
+function newTeklif(){
+  const a = S.ayar.teklif;
+  return {
+    id:uid(), no:nextNo("ALT", S.teklifler, x => x.no), rev:1, durum:"Taslak",
+    olusturma:new Date().toISOString(), guncelleme:new Date().toISOString(),
+    tarih:today(), gecerlilik:num(a.gecerlilik) || 15, hazirlayan:S.ayar.firma.yetkili || "",
+    musteri:{ad:"", telefon:"", eposta:"", adres:"", kimlikNo:""}, proje:{ad:"", adres:""},
+    giris:a.giris, gorunum:"genel", kdvOran:num(a.kdv), kdvGoster:"haric", genelGoturu:0, iskonto:0,
+    bolumler:[], kosullar:String(a.kosullar || "").split("\n").map(s => s.trim()).filter(Boolean).map(t => ({t, on:true})),
+    odemePlani:clone(DEFAULT_ODEME), sozlesme:null
+  };
+}
+function latestRevs(){
+  const by = {}; S.teklifler.forEach(t => { if (!by[t.no] || by[t.no].rev < t.rev) by[t.no] = t; });
+  return Object.values(by).sort((a, b) => (b.guncelleme || "").localeCompare(a.guncelleme || ""));
+}
+
+/* ---------- kaydetme ---------- */
+let saveTimer = null; const dirty = new Set();
+function markDirty(t){ t.guncelleme = new Date().toISOString(); dirty.add(t.id); setSave("Kaydediliyor…"); clearTimeout(saveTimer); saveTimer = setTimeout(flush, 700); }
+async function flush(){
+  const ids = [...dirty]; dirty.clear();
+  try { for (const id of ids){ const t = S.teklifler.find(x => x.id === id); if (t) await store.put("teklifler", t); } setSave("Kaydedildi"); }
+  catch(e){ ids.forEach(i => dirty.add(i)); setSave("Kaydedilemedi, tekrar denenecek"); clearTimeout(saveTimer); saveTimer = setTimeout(flush, 4000); }
+}
+let ayarTimer = null;
+function saveAyar(){ setSave("Kaydediliyor…"); clearTimeout(ayarTimer); ayarTimer = setTimeout(async () => { try { await store.put("ayarlar", Object.assign({id:"firma"}, S.ayar)); setSave("Kaydedildi"); } catch(e){ setSave("Kaydedilemedi"); } }, 700); }
+const libTimers = {};
+function saveLib(item){ setSave("Kaydediliyor…"); clearTimeout(libTimers[item.id]); libTimers[item.id] = setTimeout(async () => { try { await store.put("kutuphane", item); setSave("Kaydedildi"); } catch(e){ setSave("Kaydedilemedi"); } }, 700); }
+function setSave(s){ S.saving = s; const el = document.getElementById("savestate"); if (el) el.textContent = s; }
+
+let toastT = null;
+function toast(msg){ let el = document.querySelector(".toast"); if (!el){ el = document.createElement("div"); el.className = "toast"; el.setAttribute("role","status"); document.body.appendChild(el); } el.textContent = msg; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { el.hidden = true; }, 2800); }
+
+/* ---------- yol ---------- */
+function setPath(obj, path, val){ const k = path.split("."); let o = obj; for (let i = 0; i < k.length - 1; i++){ o = o[/^\d+$/.test(k[i]) ? +k[i] : k[i]]; if (o == null) return; } o[/^\d+$/.test(k[k.length-1]) ? +k[k.length-1] : k[k.length-1]] = val; }
+function getPath(obj, path){ return path.split(".").reduce((o, k) => o == null ? o : o[/^\d+$/.test(k) ? +k : k], obj); }
+
+/* ---------- görünümler ---------- */
+function nav(){
+  const n = latestRevs().length, sz = S.teklifler.filter(t => t.sozlesme && t.sozlesme.no).length;
+  const b = (v, label, c) => '<button data-act="go" data-v="'+v+'" class="'+(S.view === v || (v === "list" && ["edit","preview"].includes(S.view)) || (v === "contracts" && S.view === "contract") ? "on" : "")+'"><span>'+label+'</span>'+(c != null ? '<span class="cnt">'+c+'</span>' : "")+'</button>';
+  return '<aside class="side"><div class="brand">'+logoHTML(true)+'</div><nav aria-label="Ana menü">'+b("list","Teklifler",n)+b("contracts","Sözleşmeler",sz)+b("library","Madde kütüphanesi",S.kutuphane.length)+b("settings","Firma ve şablonlar")+'</nav><div class="foot">'+(store.mode === "db" ? "Veriler bulutta saklanıyor." : "Veriler bu tarayıcıda saklanıyor.")+'<br><span id="savestate">'+esc(S.saving)+'</span></div></aside>';
+}
+
+function render(){
+  const app = document.getElementById("app");
+  const views = {list:viewList, edit:viewEdit, preview:viewPreview, contract:viewContract, contracts:viewContracts, library:viewLibrary, settings:viewSettings};
+  if (!cur() && ["edit","preview","contract"].includes(S.view)) S.view = "list";
+  app.innerHTML = '<div class="shell">'+nav()+'<main class="main">'+(S.loaded ? views[S.view]() : '<p class="sub">Yükleniyor…</p>')+'</main></div>' + (S.libTarget != null ? libModal() : "");
+  autoGrow(app);
+}
+function autoGrow(root){ root.querySelectorAll("textarea[data-grow]").forEach(t => { t.style.height = "auto"; t.style.height = (t.scrollHeight + 2) + "px"; }); }
+
+function pill(d){ return '<span class="pill st-'+esc(String(d).split(" ")[0])+'">'+esc(d)+'</span>'; }
+
+function viewList(){
+  const all = latestRevs();
+  const acik = all.filter(t => ["Taslak","Gönderildi","Revizyon istendi"].includes(t.durum));
+  const onay = all.filter(t => t.durum === "Onaylandı");
+  const q = S.q.toLocaleLowerCase("tr");
+  const rows = all.filter(t => (S.filter === "Tümü" || t.durum === S.filter) && (!q || [t.no, t.musteri.ad, t.proje.ad, t.proje.adres].join(" ").toLocaleLowerCase("tr").includes(q)));
+  let h = '<div class="top"><div class="grow"><h1>Teklifler</h1><div class="sub">Her satır bir teklifin son sürümünü gösterir.</div></div><button class="btn" data-act="csv">Excel\'e aktar</button><button class="btn pri" data-act="new">+ Yeni teklif</button></div>';
+  h += '<div class="kpis"><div class="kpi"><small>Açık teklif</small><b>'+acik.length+'</b></div><div class="kpi"><small>Açık tekliflerin tutarı</small><b>'+money(acik.reduce((s,t)=>s+calc(t).matrah,0))+'</b></div><div class="kpi"><small>Onaylanan</small><b>'+onay.length+'</b></div><div class="kpi"><small>Onaylanan tutar</small><b>'+money(onay.reduce((s,t)=>s+calc(t).matrah,0))+'</b></div></div>';
+  if (!all.length){
+    return h + '<div class="empty"><img src="'+MARK_DOC+'" alt=""><b>Henüz teklif yok</b><span>İlk teklifinizi oluşturun: müşteri bilgilerini girin, bölümleri açın ve maddeleri kütüphaneden seçin.</span><button class="btn pri" data-act="new">+ Yeni teklif</button></div>';
+  }
+  h += '<div class="toolbar"><input type="text" id="q" data-act-input="q" placeholder="Müşteri, proje veya teklif no ara" value="'+esc(S.q)+'" aria-label="Ara"><div class="chips">'+["Tümü"].concat(DURUMLAR).map(d => '<button class="chip '+(S.filter===d?"on":"")+'" data-act="filter" data-v="'+esc(d)+'">'+esc(d)+'</button>').join("")+'</div></div>';
+  h += '<div class="tablewrap"><table class="list"><thead><tr><th>Teklif no</th><th>Müşteri</th><th>Proje</th><th>Sürüm</th><th class="r">Tutar (KDV hariç)</th><th class="r">Kâr</th><th>Durum</th><th>Güncelleme</th></tr></thead><tbody>';
+  h += rows.map(t => '<tr data-act="open" data-id="'+t.id+'" tabindex="0"><td class="mono">'+esc(t.no)+'</td><td>'+(esc(t.musteri.ad) || '<span class="sub">Adsız müşteri</span>')+'</td><td>'+esc(t.proje.ad)+'<div class="sub">'+esc(t.proje.adres)+'</div></td><td>Rev.'+t.rev+'</td><td class="r mono">'+money(calc(t).matrah)+'</td><td class="r">'+(calc(t).maliyet ? '<span class="'+karCls(calc(t).marj)+'" style="font-weight:700">%'+fmt.format(calc(t).marj)+'</span>' : '<span class="sub">—</span>')+'</td><td>'+pill(t.durum)+'</td><td class="sub">'+trDate((t.guncelleme||"").slice(0,10))+'</td></tr>').join("");
+  if (!rows.length) h += '<tr><td colspan="8" class="sub" style="text-align:center;padding:24px">Aramaya uyan teklif yok.</td></tr>';
+  return h + '</tbody></table></div>';
+}
+
+function inp(path, val, o){ o = o || {}; return '<input type="'+(o.type||"text")+'" data-k="'+path+'"'+(o.n?' data-n="1" inputmode="decimal" class="num'+(o.cls?" "+o.cls:"")+'"':(o.cls?' class="'+o.cls+'"':""))+' value="'+esc(o.n ? numIn(val) : val)+'"'+(o.ph?' placeholder="'+esc(o.ph)+'"':"")+(o.aria?' aria-label="'+esc(o.aria)+'"':"")+'>'; }
+function fld(label, inner){ return '<label class="fld"><span>'+label+'</span>'+inner+'</label>'; }
+
+function viewEdit(){
+  const t = cur(); const c = calc(t);
+  const revs = S.teklifler.filter(x => x.no === t.no).sort((a,b) => a.rev - b.rev);
+  const latest = revs[revs.length - 1].id === t.id;
+  let h = '<div class="top"><button class="btn ghost" data-act="go" data-v="list">← Teklifler</button><div class="grow"><h1>'+esc(t.no)+' · Rev.'+t.rev+'</h1><div class="sub">'+(esc(t.musteri.ad) || "Yeni teklif")+(t.proje.ad ? " · "+esc(t.proje.ad) : "")+'</div></div>';
+  h += '<select data-k="durum" aria-label="Durum" style="width:auto">'+DURUMLAR.map(d => '<option'+(t.durum===d?" selected":"")+'>'+d+'</option>').join("")+'</select>';
+  h += '<button class="btn" data-act="preview">Önizle ve PDF</button><button class="btn" data-act="revize">Yeni revizyon</button><button class="btn" data-act="copy" title="Bölüm ve maddeleri yeni bir teklife kopyalar">Kopyala</button><button class="btn dark" data-act="contract">Sözleşme</button></div>';
+  if (revs.length > 1) h += '<div class="vers" style="margin-bottom:12px"><span class="sub">Sürümler:</span>'+revs.map(r => '<button class="chip '+(r.id===t.id?"on":"")+'" data-act="open" data-id="'+r.id+'">Rev.'+r.rev+'</button>').join("")+'</div>';
+  if (!latest) h += '<div class="banner">Bu eski bir sürüm (Rev.'+t.rev+'). Müşteriye gönderilmiş haliyle saklanıyor; değişiklikleri son sürümde yapın.</div>';
+  h += '<div class="ed"><div class="ed-main">';
+  // müşteri
+  h += '<section class="card"><h2>Müşteri ve proje</h2><div class="grid">'
+    + fld("Müşteri adı / unvanı", inp("musteri.ad", t.musteri.ad, {ph:"Ad Soyad veya firma"}))
+    + fld("Telefon", inp("musteri.telefon", t.musteri.telefon))
+    + fld("E-posta", inp("musteri.eposta", t.musteri.eposta))
+    + fld("Müşteri adresi", inp("musteri.adres", t.musteri.adres))
+    + fld("Proje adı", inp("proje.ad", t.proje.ad, {ph:"Örn. Daire tadilatı"}))
+    + fld("Proje adresi", inp("proje.adres", t.proje.adres))
+    + fld("Teklif tarihi", inp("tarih", t.tarih, {type:"date"}))
+    + fld("Geçerlilik (gün)", inp("gecerlilik", t.gecerlilik, {n:1}))
+    + fld("Hazırlayan", inp("hazirlayan", t.hazirlayan))
+    + '</div>' + fld("Giriş metni", '<textarea data-k="giris" data-grow rows="2">'+esc(t.giris)+'</textarea>') + '</section>';
+  // bölümler
+  h += '<section class="card"><h2>Bölümler ve maddeler <small>'+t.bolumler.length+' bölüm · '+t.bolumler.reduce((s,b)=>s+b.maddeler.length,0)+' madde</small></h2>';
+  if (!t.bolumler.length) h += '<div class="empty" style="padding:24px"><b>Bölüm ekleyerek başlayın</b><span>Bölüm bir oda (Mutfak) ya da bir iş grubu (Tesisat) olabilir. Maddeler bölümlerin içine yazılır.</span></div>';
+  t.bolumler.forEach((b, bi) => {
+    h += '<div class="bolum"><div class="bh"><span class="bn">'+two(bi+1)+'</span>'+inp("bolumler."+bi+".ad", b.ad, {cls:"bname", aria:"Bölüm adı"})
+      + inp("bolumler."+bi+".goturu", b.goturu, {n:1, cls:"bgot", ph:"Götürü bölüm bedeli", aria:"Götürü bölüm bedeli"})
+      + (S.showCost ? inp("bolumler."+bi+".goturuMaliyet", b.goturuMaliyet, {n:1, cls:"bgot", ph:"Götürü bölüm maliyeti", aria:"Götürü bölüm maliyeti"}) : "")
+      + '<span class="btot" data-calc="bolum:'+bi+'">'+money(bolumToplam(b))+'</span>'
+      + '<span><button class="icon" data-act="bup" data-b="'+bi+'" title="Yukarı taşı" aria-label="Bölümü yukarı taşı">↑</button><button class="icon" data-act="bdown" data-b="'+bi+'" title="Aşağı taşı" aria-label="Bölümü aşağı taşı">↓</button><button class="icon del" data-act="bdel" data-b="'+bi+'" title="Bölümü sil" aria-label="Bölümü sil">✕</button></span></div><div class="maddeler">';
+    b.maddeler.forEach((m, mi) => {
+      const p = "bolumler."+bi+".maddeler."+mi+".";
+      h += '<div class="madde"><span class="mn">'+(bi+1)+'.'+(mi+1)+'</span><div class="mtext">'
+        + inp(p+"baslik", m.baslik, {cls:"mtitle", ph:"Kısa başlık (örn. Mutfak dolabı)", aria:"Madde başlığı"})
+        + '<textarea data-k="'+p+'aciklama" data-grow rows="2" placeholder="Açıklama detayı: yapılacak iş, malzeme, marka ve model" aria-label="Açıklama">'+esc(m.aciklama)+'</textarea>'
+        + secimHTML(m, p)
+        + inp(p+"not", m.not, {ph:"Not (isteğe bağlı, belgede italik görünür)", aria:"Not"})
+        + '</div><div class="mprice">'
+        + inp(p+"miktar", m.miktar, {n:1, ph:"Miktar", aria:"Miktar"})
+        + '<select data-k="'+p+'birim" aria-label="Birim">'+BIRIMLER.map(u => '<option'+(m.birim===u?" selected":"")+'>'+u+'</option>').join("")+'</select>'
+        + inp(p+"birimFiyat", m.birimFiyat, {n:1, ph:"Birim fiyat", aria:"Birim fiyat"})
+        + (S.showCost ? '<span class="cost">'+inp(p+"birimMaliyet", m.birimMaliyet, {n:1, ph:"Birim maliyet (iç)", aria:"Birim maliyet"})+'</span>' : "")
+        + '<span class="mtut" data-calc="madde:'+bi+':'+mi+'">'+money(maddeTutar(m))+'</span>'
+        + (S.showCost ? '<span class="mkar" data-calc="mkar:'+bi+':'+mi+'">'+mkarText(m)+'</span>' : "") + '</div>'
+        + '<div class="mctl"><button class="icon" data-act="mup" data-b="'+bi+'" data-m="'+mi+'" aria-label="Maddeyi yukarı taşı" title="Yukarı">↑</button><button class="icon" data-act="mdown" data-b="'+bi+'" data-m="'+mi+'" aria-label="Maddeyi aşağı taşı" title="Aşağı">↓</button><button class="icon" data-act="msave" data-b="'+bi+'" data-m="'+mi+'" aria-label="Kütüphaneye kaydet" title="Kütüphaneye kaydet">☆</button><button class="icon del" data-act="mdel" data-b="'+bi+'" data-m="'+mi+'" aria-label="Maddeyi sil" title="Sil">✕</button></div></div>';
+    });
+    h += '</div><div class="badd"><button class="btn sm" data-act="libopen" data-b="'+bi+'">+ Kütüphaneden madde</button><button class="btn sm ghost" data-act="madd" data-b="'+bi+'">+ Boş madde</button></div></div>';
+  });
+  const used = new Set(t.bolumler.map(b => b.ad.toLocaleLowerCase("tr")));
+  h += '<div class="addsec"><div class="row"><input type="text" id="newbolum" placeholder="Yeni bölüm adı" aria-label="Yeni bölüm adı"><button class="btn" data-act="badd">+ Bölüm ekle</button></div><div class="chips">'+BOLUM_ONERI.filter(n => !used.has(n.toLocaleLowerCase("tr"))).map(n => '<button class="chip" data-act="baddq" data-v="'+esc(n)+'">+ '+esc(n)+'</button>').join("")+'</div></div></section>';
+  // koşullar
+  h += '<section class="card"><h2>Teklif koşulları <small>İşaretli olanlar belgede görünür</small></h2><div class="cond">'
+    + t.kosullar.map((k, i) => '<label><input type="checkbox" data-k="kosullar.'+i+'.on" '+(k.on?"checked":"")+'><span class="t">'+esc(k.t)+'</span><button class="icon del" data-act="kdel" data-i="'+i+'" aria-label="Koşulu sil">✕</button></label>').join("")
+    + '</div><div class="addsec"><div class="row"><input type="text" id="newkosul" placeholder="Yeni koşul yazın" aria-label="Yeni koşul"><button class="btn" data-act="kadd">Ekle</button></div></div></section>';
+  h += '<div style="display:flex;justify-content:flex-end"><button class="btn danger" data-act="tdel">Bu sürümü sil</button></div>';
+  h += '</div>' + asideHTML(t, c) + '</div>';
+  return h;
+}
+
+function asideHTML(t, c){
+  const g = t.gorunum;
+  const fark = num(t.genelGoturu) > 0 && Math.abs(num(t.genelGoturu) - c.kalem) > 0.5 && c.kalem > 0;
+  let h = '<aside class="aside"><section class="card"><h2>Müşteri fiyatı nasıl görsün?</h2><div class="seg" role="group" aria-label="Fiyat görünümü">'
+    + [["genel","Genel toplam"],["bolum","Bölüm toplamları"],["madde","Madde fiyatları"]].map(([v,l]) => '<button data-act="gorunum" data-v="'+v+'" class="'+(g===v?"on":"")+'" aria-pressed="'+(g===v)+'">'+l+'</button>').join("")
+    + '</div><div class="hint">'+({genel:"Belgede maddeler fiyatsız, en altta tek toplam görünür.", bolum:"Her bölümün sonunda bölüm toplamı, en altta genel toplam görünür.", madde:"Her maddenin miktarı, birim fiyatı ve tutarı görünür."})[g]+'</div></section>';
+  h += '<section class="card"><h2>Fiyat</h2>'
+    + '<div class="tl"><span>Kalemlerden hesaplanan</span><span data-calc="kalem">'+money(c.kalem)+'</span></div>'
+    + fld("Götürü toplam (isteğe bağlı)", inp("genelGoturu", t.genelGoturu, {n:1, ph:"Boşsa kalem toplamı kullanılır"}))
+    + '<div data-calc="fark">'+(fark ? '<div class="warnbox">Götürü toplam kalem toplamından farklı. '+(g!=="genel"?"Belgede bölüm/madde tutarları ile toplam tutmayacak.":"Müşteri yalnızca götürü toplamı görür.")+'</div>' : "")+'</div>'
+    + fld("İskonto (₺)", inp("iskonto", t.iskonto, {n:1}))
+    + '<div class="grid" style="grid-template-columns:1fr 1fr">'+fld("KDV oranı", '<select data-k="kdvOran" data-n="1">'+[0,1,10,20].map(v => '<option value="'+v+'"'+(num(t.kdvOran)===v?" selected":"")+'>%'+v+'</option>').join("")+'</select>')
+    + fld("Belgede KDV", '<select data-k="kdvGoster"><option value="haric"'+(t.kdvGoster!=="dahil"?" selected":"")+'>Hariç yaz</option><option value="dahil"'+(t.kdvGoster==="dahil"?" selected":"")+'>Dahil göster</option></select>')+'</div>'
+    + '<div class="tl"><span>Toplam (KDV hariç)</span><span data-calc="matrah">'+money(c.matrah)+'</span></div>'
+    + '<div class="tl"><span>KDV %'+num(t.kdvOran)+'</span><span data-calc="kdv">'+money(c.kdv)+'</span></div>'
+    + '<div class="tl big"><span>'+(t.kdvGoster==="dahil"?"GENEL TOPLAM":"GENEL TOPLAM (KDV HARİÇ)")+'</span><span data-calc="genel">'+money(t.kdvGoster==="dahil"?c.dahil:c.matrah)+'</span></div>'
+    + '<div class="yazi" data-calc="yazi">Yalnız '+esc(yaziyla(t.kdvGoster==="dahil"?c.dahil:c.matrah))+'</div></section>'
+    + '<section class="card costcard"><h2>İç maliyet ve kâr <small>Müşteri görmez</small></h2>'
+    + (S.showCost ? '<div class="tl"><span>Toplam maliyet</span><span data-calc="maliyet">'+money(c.maliyet)+'</span></div><div class="tl"><span>Kâr (KDV hariç)</span><span data-calc="kar">'+money(c.kar)+'</span></div><div class="tl"><span>Kâr oranı</span><span data-calc="marj" class="'+karCls(c.marj)+'">'+(c.maliyet ? "%"+fmt.format(c.marj) : "—")+'</span></div><div class="hint">Maliyeti madde bazında (birim maliyet) ya da bölüm bazında (götürü maliyet) girebilirsiniz.</div>' : '<div class="hint">Maliyet alanları gizli. Ekranı müşteriye gösterirken gizli tutun.</div>')
+    + '<button class="btn sm" data-act="togglecost">'+(S.showCost ? "Maliyet alanlarını gizle" : "Maliyet alanlarını göster")+'</button></section>'
+    + '<div class="savestate" style="text-align:right">'+(store.mode==="db"?"Değişiklikler otomatik kaydedilir.":"Değişiklikler bu tarayıcıya kaydedilir.")+'</div></aside>';
+  return h;
+}
+
+function updateCalc(){
+  const t = cur(); if (!t) return; const c = calc(t);
+  document.querySelectorAll("[data-calc]").forEach(el => {
+    const [k, a, b] = el.dataset.calc.split(":");
+    if (k === "madde"){ const m = t.bolumler[a] && t.bolumler[a].maddeler[b]; if (m) el.textContent = money(maddeTutar(m)); }
+    else if (k === "bolum"){ const bo = t.bolumler[a]; if (bo) el.textContent = money(bolumToplam(bo)); }
+    else if (k === "odeme"){ const o = t.odemePlani[a]; if (o) el.textContent = money(c.odemeBaz * num(o.oran) / 100); }
+    else if (k === "odemesum"){ const top = t.odemePlani.reduce((s,o)=>s+num(o.oran),0); const ok = Math.abs(top-100) < 0.001; el.className = ok ? "okbox" : "badbox"; el.textContent = ok ? "Toplam %100" : "Toplam %"+fmt.format(top)+", %100 olmalı"; }
+    else if (k === "kalem") el.textContent = money(c.kalem);
+    else if (k === "mkar"){ const m = t.bolumler[a] && t.bolumler[a].maddeler[b]; if (m) el.textContent = mkarText(m); }
+    else if (k === "maliyet") el.textContent = money(c.maliyet);
+    else if (k === "kar") el.textContent = money(c.kar);
+    else if (k === "marj"){ el.textContent = c.maliyet ? "%"+fmt.format(c.marj) : "—"; el.className = karCls(c.marj); }
+    else if (k === "matrah") el.textContent = money(c.matrah);
+    else if (k === "kdv") el.textContent = money(c.kdv);
+    else if (k === "genel") el.textContent = money(t.kdvGoster==="dahil"?c.dahil:c.matrah);
+    else if (k === "yazi") el.textContent = "Yalnız " + yaziyla(t.kdvGoster==="dahil"?c.dahil:c.matrah);
+    else if (k === "fark"){ const fark = num(t.genelGoturu) > 0 && Math.abs(num(t.genelGoturu) - c.kalem) > 0.5 && c.kalem > 0; el.innerHTML = fark ? '<div class="warnbox">Götürü toplam kalem toplamından farklı. '+(t.gorunum!=="genel"?"Belgede bölüm/madde tutarları ile toplam tutmayacak.":"Müşteri yalnızca götürü toplamı görür.")+'</div>' : ""; }
+    else if (k === "sz-odsum") el.innerHTML = szOdemeCheck(t);
+  });
+}
+
+function mkarText(m){ const t = maddeTutar(m), c = maddeMaliyet(m); if (!c) return "Maliyet girilmedi"; const k = t - c; return "Maliyet "+money(c)+" · kâr "+money(k)+(t > 0 ? " (%"+fmt.format(k / t * 100)+")" : ""); }
+function karCls(marj){ return marj >= 20 ? "kar-ok" : marj >= 10 ? "kar-low" : "kar-bad"; }
+
+/* ---------- belge ---------- */
+function firmaFoot(f, cls){
+  const col = (label, lines) => { lines = lines.filter(Boolean); return lines.length ? '<div class="col"><small>'+label+'</small>'+lines.map(l => '<span>'+l+'</span>').join("")+'</div>' : ""; };
+  const cols = col("SHOWROOM", [esc(f.showroomAdres), f.showroomTel ? "T. "+esc(f.showroomTel) : ""])
+    + col("FABRİKA", [esc(f.fabrikaAdres)])
+    + col("İLETİŞİM", [f.gsm ? "GSM / WhatsApp "+esc(f.gsm) : "", esc(f.eposta), esc(f.web), f.instagram ? "Instagram "+esc(f.instagram) : ""]);
+  const legal = [esc(f.unvan || f.ad), (f.vergiDairesi || f.vergiNo) ? [esc(f.vergiDairesi) ? esc(f.vergiDairesi)+" V.D." : "", esc(f.vergiNo)].filter(Boolean).join(" ") : ""].filter(Boolean);
+  return '<div class="d-foot'+(cls ? " "+cls : "")+'">'+(cols ? '<div class="cols">'+cols+'</div>' : "")+'<div class="legal">'+legal.map(x => '<span>'+x+'</span>').join("")+'</div></div>';
+}
+function headContact(f){
+  const it = [f.showroomTel ? '<span><b>TEL</b>'+esc(f.showroomTel)+'</span>' : "", f.gsm ? '<span><b>GSM</b>'+esc(f.gsm)+'</span>' : "", f.eposta ? '<span><b>E-POSTA</b>'+esc(f.eposta)+'</span>' : "", f.web ? '<span><b>WEB</b>'+esc(f.web)+'</span>' : ""].filter(Boolean);
+  return (f.slogan ? '<div class="d-slogan">'+esc(f.slogan)+'</div>' : "") + (it.length ? '<div class="d-contact">'+it.join("")+'</div>' : "");
+}
+function docHead(f, typ, meta, small){
+  return '<div class="d-head"><div>'+logoHTML(false)+headContact(f)+'</div><div class="d-type"><div class="t"'+(small?' style="font-size:24px"':"")+'>'+typ+'</div><dl>'+meta.map(([k,v]) => '<dt>'+k+'</dt><dd>'+v+'</dd>').join("")+'</dl></div></div><div class="d-rule"></div>';
+}
+function docTeklif(t){
+  const f = S.ayar.firma, c = calc(t), g = t.gorunum;
+  const toplamGoster = t.kdvGoster === "dahil" ? c.dahil : c.matrah;
+  let h = '<div class="doc" id="docEl" data-runhead="'+esc(t.no)+' · Rev.'+t.rev+'">'+docHead(f, "TEKLİF", [["Teklif no", esc(t.no)], ["Revizyon", t.rev], ["Tarih", trDate(t.tarih)], ["Geçerlilik", trDate(addDays(t.tarih, num(t.gecerlilik)))]]);
+  h += '<div class="d-parties"><div><small>SAYIN</small><b>'+(esc(t.musteri.ad)||"—")+'</b>'+(t.musteri.adres?'<span>'+esc(t.musteri.adres)+'</span>':"")+'<span>'+[esc(t.musteri.telefon), esc(t.musteri.eposta)].filter(Boolean).join(" · ")+'</span></div><div><small>PROJE</small><b>'+(esc(t.proje.ad)||"—")+'</b>'+(t.proje.adres?'<span>'+esc(t.proje.adres)+'</span>':"")+(t.hazirlayan?'<span>Hazırlayan: '+esc(t.hazirlayan)+'</span>':"")+'</div></div>';
+  if (t.giris) h += '<p class="d-intro">'+esc(t.giris)+'</p>';
+  t.bolumler.forEach((b, bi) => {
+    h += '<section class="d-sec"><div class="d-sec-h"><span class="d-sec-n">'+two(bi+1)+'</span><h3>'+esc(b.ad)+'</h3></div>';
+    b.maddeler.forEach((m, mi) => {
+      h += '<div class="d-madde"><span class="n">'+(bi+1)+'.'+(mi+1)+'</span><div>'+(m.baslik?'<b>'+esc(m.baslik)+'</b>':"")+(m.aciklama?'<p>'+esc(m.aciklama).replace(/\n/g,"<br>")+'</p>':"")+(m.not?'<p class="note">Not: '+esc(m.not)+'</p>':"")+'</div>'
+        + (g === "madde" ? '<div class="d-ma"><span>'+fmt.format(num(m.miktar))+' '+esc(m.birim)+' × '+money(num(m.birimFiyat))+'</span><b>'+money(maddeTutar(m))+'</b></div>' : '<div></div>') + '</div>';
+    });
+    if (g !== "genel") h += '<div class="d-sec-t"><span>'+esc(b.ad)+' toplamı</span>'+money(bolumToplam(b))+'</div>';
+    h += '</section>';
+  });
+  h += '<div class="d-sum">';
+  if (g === "bolum") t.bolumler.forEach((b, bi) => { h += '<div class="l"><span>'+two(bi+1)+' '+esc(b.ad)+'</span><span>'+money(bolumToplam(b))+'</span></div>'; });
+  if (c.iskonto > 0){ h += '<div class="l"><span>Ara toplam</span><span>'+money(c.ara)+'</span></div><div class="l"><span>İskonto</span><span>−'+money(c.iskonto)+'</span></div>'; }
+  if (t.kdvGoster === "dahil"){ h += '<div class="l"><span>Toplam (KDV hariç)</span><span>'+money(c.matrah)+'</span></div><div class="l"><span>KDV %'+num(t.kdvOran)+'</span><span>'+money(c.kdv)+'</span></div>'; }
+  h += '<div class="l g"><span>'+(t.kdvGoster==="dahil"?"GENEL TOPLAM":"GENEL TOPLAM (KDV HARİÇ)")+'</span><span>'+money(toplamGoster)+'</span></div><div class="yz">Yalnız '+esc(yaziyla(toplamGoster))+'</div></div>';
+  const kos = t.kosullar.filter(k => k.on);
+  if (kos.length) h += '<div class="d-cond"><div><h4>TEKLİF KOŞULLARI</h4><ol>'+kos.map(k => '<li>'+esc(k.t)+'</li>').join("")+'</ol></div></div>';
+  h += firmaFoot(f) + '</div>';
+  return h;
+}
+
+function viewPreview(){
+  const t = cur();
+  let h = '<div class="top"><button class="btn ghost" data-act="open" data-id="'+t.id+'">← Editöre dön</button><div class="grow"><h1>Teklif belgesi</h1><div class="sub">'+esc(t.no)+' · Rev.'+t.rev+' · Fiyat görünümü: '+({genel:"Genel toplam",bolum:"Bölüm toplamları",madde:"Madde fiyatları"})[t.gorunum]+'</div></div><div class="seg" style="width:340px;max-width:100%">'+[["genel","Genel toplam"],["bolum","Bölüm"],["madde","Madde"]].map(([v,l]) => '<button data-act="gorunum" data-v="'+v+'" class="'+(t.gorunum===v?"on":"")+'">'+l+'</button>').join("")+'</div><button class="btn pri" data-act="pdf" data-kind="teklif">PDF indir</button></div>';
+  if (!S.ayar.firma.showroomAdres && !S.ayar.firma.fabrikaAdres) h += '<div class="banner">Belgenin üst ve alt bilgisindeki firma adresleri boş. <button class="btn sm" data-act="go" data-v="settings">Firma bilgilerini girin</button></div>';
+  return h + '<div class="paperwrap">'+docTeklif(t)+'</div>';
+}
+
+/* ---------- sözleşme ---------- */
+function ensureSz(t){
+  if (!t.sozlesme){
+    const c = calc(t);
+    t.sozlesme = {no:nextNo("SZ", S.teklifler, x => x.sozlesme && x.sozlesme.no), tarih:today(), baslama:"", teslim:"", kimlikNo:t.musteri.kimlikNo || "", isAdresi:t.proje.adres || t.musteri.adres || "",
+      odemeler:t.odemePlani.map(o => ({tarih:"", yontem:"Havale / EFT", tutar:Math.round(c.odemeBaz*num(o.oran)/100*100)/100, aciklama:o.aciklama}))};
+  }
+  return t.sozlesme;
+}
+function szBedel(t){ const c = calc(t); return t.kdvGoster === "dahil" ? c.dahil : c.matrah; }
+function szOdemeCheck(t){ const s = t.sozlesme; if (!s) return ""; const top = s.odemeler.reduce((a,o)=>a+num(o.tutar),0), b = szBedel(t); return Math.abs(top-b) < 0.01 ? '<span class="okbox">Ödemeler toplamı sözleşme bedeline eşit ('+money(b)+')</span>' : '<span class="badbox">Ödemeler toplamı '+money(top)+', sözleşme bedeli '+money(b)+'. Fark: '+money(b-top)+'</span>'; }
+function szEksik(t){
+  const s = t.sozlesme, f = S.ayar.firma, e = [];
+  if (!t.musteri.ad) e.push("Müşteri adı"); if (!s.kimlikNo) e.push("Müşteri T.C. / vergi no"); if (!s.isAdresi) e.push("İş adresi");
+  if (!s.baslama) e.push("İşe başlama tarihi"); if (!s.teslim) e.push("Teslim tarihi"); if (!f.yetkili) e.push("Firma yetkilisi (Firma ve şablonlar)"); if (!f.mahkeme) e.push("Yetkili mahkeme şehri (Firma ve şablonlar)");
+  if (s.odemeler.some(o => !o.tarih)) e.push("Ödeme tarihleri");
+  if (Math.abs(s.odemeler.reduce((a,o)=>a+num(o.tutar),0) - szBedel(t)) >= 0.01) e.push("Ödemeler toplamı bedele eşit değil");
+  return e;
+}
+function fillPh(text, t){
+  const s = t.sozlesme, f = S.ayar.firma, b = szBedel(t);
+  const m = (v) => v ? esc(v) : '<span class="miss">__________</span>';
+  const map = {"{IS_ADRESI}":m(s.isAdresi), "{TEKLIF_NO}":esc(t.no+" Rev."+t.rev), "{BASLAMA}":m(trDate(s.baslama)), "{TESLIM}":m(trDate(s.teslim)), "{BEDEL}":money(b), "{BEDEL_YAZI}":esc(yaziyla(b)),
+    "{KDV_DURUMU}": t.kdvGoster==="dahil" ? "bu tutara %"+num(t.kdvOran)+" KDV dahildir" : "bu tutara KDV dahil değildir; KDV ayrıca ödenir", "{GARANTI}":m(f.garanti), "{MAHKEME}":m(f.mahkeme), "{MUSTERI}":m(t.musteri.ad), "{FIRMA}":esc(f.ad)};
+  return esc(text).replace(/\{[A-Z_]+\}/g, k => map[k] != null ? map[k] : k);
+}
+function docSozlesme(t){
+  const s = t.sozlesme, f = S.ayar.firma, c = calc(t);
+  const m = (v) => v ? esc(v) : '<span class="miss">__________</span>';
+  let h = '<div class="doc" id="docEl" data-runhead="Sözleşme '+esc(s.no)+'">'+docHead(f, "SÖZLEŞME", [["Sözleşme no", esc(s.no)], ["Tarih", trDate(s.tarih)], ["Dayanak teklif", esc(t.no)+" Rev."+t.rev]], true);
+  h += '<div class="d-title"><h2>TADİLAT VE DEKORASYON UYGULAMA SÖZLEŞMESİ</h2></div>';
+  h += '<div class="d-cl"><h4>Madde 1 · Taraflar</h4><div class="d-parties" style="margin-top:6px"><div><small>İŞVEREN</small><b>'+m(t.musteri.ad)+'</b><span>T.C. / Vergi no: '+m(s.kimlikNo)+'</span><span>Adres: '+m(t.musteri.adres)+'</span><span>'+[esc(t.musteri.telefon), esc(t.musteri.eposta)].filter(Boolean).join(" · ")+'</span></div><div><small>YÜKLENİCİ</small><b>'+esc(f.ad)+'</b><span>Yetkili: '+m(f.yetkili)+'</span><span>'+[f.vergiDairesi?esc(f.vergiDairesi)+" V.D.":"", f.vergiNo?esc(f.vergiNo):""].filter(Boolean).join(" · ")+'</span><span>Adres: '+m(f.showroomAdres || f.fabrikaAdres)+'</span></div></div></div>';
+  S.ayar.sozlesmeMaddeleri.forEach((md, i) => { h += '<div class="d-cl"><h4>Madde '+(i+2)+' · '+esc(md.baslik)+'</h4><p>'+fillPh(md.metin, t)+'</p></div>'; });
+  h += '<div class="d-sign"><div><b>İŞVEREN</b>'+m(t.musteri.ad)+'<br>İmza</div><div><b>YÜKLENİCİ · '+esc(f.ad)+'</b>'+m(f.yetkili)+'<br>Kaşe / İmza</div></div>';
+  // Ek-1
+  h += '<div class="d-ek pb"><h3>EK-1 · İŞ KAPSAMI</h3><div class="sub" style="color:#6b7480;font-size:11px">'+esc(t.no)+' Rev.'+t.rev+' numaralı onaylı tekliften alınmıştır.</div>';
+  t.bolumler.forEach((b, bi) => {
+    h += '<section class="d-sec" style="margin-top:14px"><div class="d-sec-h"><span class="d-sec-n">'+two(bi+1)+'</span><h3>'+esc(b.ad)+'</h3></div>';
+    b.maddeler.forEach((mm, mi) => { h += '<div class="d-madde"><span class="n">'+(bi+1)+'.'+(mi+1)+'</span><div>'+(mm.baslik?'<b>'+esc(mm.baslik)+'</b>':"")+(mm.aciklama?'<p>'+esc(mm.aciklama).replace(/\n/g,"<br>")+'</p>':"")+(mm.not?'<p class="note">Not: '+esc(mm.not)+'</p>':"")+'</div>'+(t.gorunum==="madde"?'<div class="d-ma"><span>'+fmt.format(num(mm.miktar))+' '+esc(mm.birim)+'</span><b>'+money(maddeTutar(mm))+'</b></div>':'<div></div>')+'</div>'; });
+    if (t.gorunum !== "genel") h += '<div class="d-sec-t"><span>'+esc(b.ad)+' toplamı</span>'+money(bolumToplam(b))+'</div>';
+    h += '</section>';
+  });
+  h += '</div>';
+  // Ek-2
+  const top = s.odemeler.reduce((a,o)=>a+num(o.tutar),0);
+  h += '<div class="d-ek" style="margin-top:34px"><h3>EK-2 · ÖDEME TAKVİMİ</h3><table class="d-pay"><thead><tr><th>NO</th><th>AÇIKLAMA</th><th>TARİH</th><th>YÖNTEM</th><th style="text-align:right">TUTAR</th></tr></thead><tbody>'
+    + s.odemeler.map((o, i) => '<tr><td>'+(i+1)+'</td><td>'+esc(o.aciklama)+'</td><td>'+m(trDate(o.tarih))+'</td><td>'+esc(o.yontem)+'</td><td style="text-align:right">'+money(num(o.tutar))+'</td></tr>').join("")
+    + '</tbody><tfoot><tr><td colspan="4">Toplam'+(t.kdvGoster==="dahil"?" (KDV dahil)":" (KDV hariç)")+'</td><td style="text-align:right">'+money(top)+'</td></tr></tfoot></table>'
+    + (f.iban ? '<p style="margin-top:10px;color:#4d5661">Havale / EFT için IBAN: <b>'+esc(f.iban)+'</b></p>' : "")
+    + '<div class="d-sign"><div><b>İŞVEREN</b>'+m(t.musteri.ad)+'<br>İmza</div><div><b>YÜKLENİCİ</b>'+m(f.yetkili)+'<br>Kaşe / İmza</div></div></div>';
+  h += firmaFoot(f) + '</div>';
+  return h;
+}
+function viewContract(){
+  const t = cur(); const s = ensureSz(t);
+  const eksik = szEksik(t);
+  let h = '<div class="top"><button class="btn ghost" data-act="open" data-id="'+t.id+'">← Teklife dön</button><div class="grow"><h1>Sözleşme '+esc(s.no)+'</h1><div class="sub">Dayanak: '+esc(t.no)+' Rev.'+t.rev+' · '+esc(t.musteri.ad)+'</div></div><button class="btn pri" data-act="pdf" data-kind="sozlesme">PDF indir</button></div>';
+  if (t.durum !== "Onaylandı") h += '<div class="banner">Bu teklif henüz "Onaylandı" durumunda değil. Sözleşme genelde müşteri onayından sonra hazırlanır. <button class="btn sm" data-act="approve">Onaylandı olarak işaretle</button></div>';
+  h += '<div class="ed"><div class="ed-main"><section class="card"><h2>Sözleşme bilgileri</h2><div class="grid">'
+    + fld("Sözleşme no", inp("sozlesme.no", s.no)) + fld("Sözleşme tarihi", inp("sozlesme.tarih", s.tarih, {type:"date"}))
+    + fld("İşe başlama", inp("sozlesme.baslama", s.baslama, {type:"date"})) + fld("Teslim tarihi", inp("sozlesme.teslim", s.teslim, {type:"date"}))
+    + fld("Müşteri T.C. / vergi no", inp("sozlesme.kimlikNo", s.kimlikNo)) + fld("Müşteri adresi", inp("musteri.adres", t.musteri.adres))
+    + fld("İş adresi", inp("sozlesme.isAdresi", s.isAdresi)) + '</div></section>';
+  h += '<section class="card"><h2>Ek-2 ödeme takvimi <small>Bedel: '+money(szBedel(t))+'</small></h2><div class="cond">'
+    + s.odemeler.map((o, i) => '<div class="grid" style="grid-template-columns:1.2fr 1fr 1fr 1fr auto;align-items:end">'+fld("Açıklama", inp("sozlesme.odemeler."+i+".aciklama", o.aciklama))+fld("Tarih", inp("sozlesme.odemeler."+i+".tarih", o.tarih, {type:"date"}))+fld("Yöntem", '<select data-k="sozlesme.odemeler.'+i+'.yontem">'+["Nakit","Havale / EFT","Kredi kartı","Çek"].map(y => '<option'+(o.yontem===y?" selected":"")+'>'+y+'</option>').join("")+'</select>')+fld("Tutar", inp("sozlesme.odemeler."+i+".tutar", o.tutar, {n:1}))+'<button class="icon del" data-act="szodel" data-i="'+i+'" aria-label="Ödemeyi sil">✕</button></div>').join("")
+    + '</div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn sm" data-act="szoadd">+ Ödeme ekle</button><button class="btn sm ghost" data-act="szoreset">Teklifteki plana göre yeniden oluştur</button></div><div data-calc="sz-odsum">'+szOdemeCheck(t)+'</div></section></div>';
+  h += '<aside class="aside"><section class="card"><h2>Kontrol</h2>'+(eksik.length ? '<div class="badbox">Eksik bilgiler:</div><ul style="margin:0;padding-left:18px;font-size:13px">'+eksik.map(e => '<li>'+esc(e)+'</li>').join("")+'</ul><div class="hint">Eksikler belgede sarı boşluk olarak görünür.</div>' : '<div class="okbox">Tüm alanlar dolu, sözleşme imzaya hazır.</div>')+'</section></aside></div>';
+  return h + '<div class="paperwrap" style="margin-top:18px">'+docSozlesme(t)+'</div>';
+}
+function viewContracts(){
+  const list = S.teklifler.filter(t => t.sozlesme && t.sozlesme.no).sort((a,b) => (b.sozlesme.tarih||"").localeCompare(a.sozlesme.tarih||""));
+  let h = '<div class="top"><div class="grow"><h1>Sözleşmeler</h1><div class="sub">Onaylanan tekliflerden oluşturulan sözleşmeler. Yeni sözleşme için teklifin içindeki "Sözleşme" düğmesini kullanın.</div></div></div>';
+  if (!list.length) return h + '<div class="empty"><img src="'+MARK_DOC+'" alt=""><b>Henüz sözleşme yok</b><span>Bir teklif onaylandığında, teklif ekranındaki "Sözleşme" düğmesiyle tek tıkla oluşturulur.</span></div>';
+  return h + '<div class="tablewrap"><table class="list"><thead><tr><th>Sözleşme no</th><th>Müşteri</th><th>Dayanak teklif</th><th>Tarih</th><th class="r">Bedel</th><th>Durum</th></tr></thead><tbody>' + list.map(t => { const e = szEksik(t); return '<tr data-act="opencontract" data-id="'+t.id+'" tabindex="0"><td class="mono">'+esc(t.sozlesme.no)+'</td><td>'+esc(t.musteri.ad)+'</td><td>'+esc(t.no)+' Rev.'+t.rev+'</td><td>'+trDate(t.sozlesme.tarih)+'</td><td class="r mono">'+money(szBedel(t))+'</td><td>'+(e.length?'<span class="pill st-Revizyon">'+e.length+' eksik</span>':'<span class="pill st-Onaylandı">Hazır</span>')+'</td></tr>'; }).join("") + '</tbody></table></div>';
+}
+
+/* ---------- kütüphane ---------- */
+function libGroups(){ return [...new Set(S.kutuphane.map(x => x.grup || "Diğer"))].sort((a,b)=>a.localeCompare(b,"tr")); }
+function libFiltered(q, grup){ q = (q||"").toLocaleLowerCase("tr"); return S.kutuphane.filter(x => (grup === "Tümü" || (x.grup||"Diğer") === grup) && (!q || [x.baslik, x.aciklama, x.grup].join(" ").toLocaleLowerCase("tr").includes(q))).sort((a,b) => (a.grup||"").localeCompare(b.grup||"","tr") || (a.baslik||"").localeCompare(b.baslik||"","tr")); }
+function libModal(){
+  const items = libFiltered(S.libQ, S.libGrup); let last = null;
+  const bo = cur() && cur().bolumler[S.libTarget];
+  let h = '<div class="modal" data-act="libclose-bg"><div class="box" role="dialog" aria-modal="true" aria-label="Madde kütüphanesi"><div class="mh"><h3>Kütüphaneden madde · '+esc(bo ? bo.ad : "")+'</h3><button class="icon" data-act="libclose" aria-label="Kapat">✕</button></div><div class="ms"><input type="text" id="libq" placeholder="Ara: dolap, seramik, priz…" value="'+esc(S.libQ)+'" aria-label="Kütüphanede ara"><div class="chips">'+["Tümü"].concat(libGroups()).map(g => '<button class="chip '+(S.libGrup===g?"on":"")+'" data-act="libgrup" data-v="'+esc(g)+'">'+esc(g)+'</button>').join("")+'</div></div><div class="ml">';
+  if (!S.kutuphane.length) h += '<div class="empty" style="margin:10px"><b>Kütüphane boş</b><span>"Madde kütüphanesi" sayfasından madde ekleyin ya da teklifteki bir maddenin ☆ düğmesiyle kaydedin.</span></div>';
+  items.forEach(x => { if (x.grup !== last){ h += '<div class="libgroup">'+esc(x.grup||"Diğer")+'</div>'; last = x.grup; } h += '<button class="libitem" data-act="libpick" data-id="'+x.id+'"><b>'+esc(x.baslik)+(num(x.birimFiyat)?' <span style="font-weight:600">· '+money(num(x.birimFiyat))+' / '+esc(x.birim)+'</span>':"")+'</b><span>'+esc(x.aciklama)+'</span></button>'; });
+  if (S.kutuphane.length && !items.length) h += '<p class="sub" style="padding:12px">Aramaya uyan madde yok.</p>';
+  return h + '</div></div></div>';
+}
+function viewLibrary(){
+  let h = '<div class="top"><div class="grow"><h1>Madde kütüphanesi</h1><div class="sub">Sık kullandığınız maddeler. Teklif yazarken "Kütüphaneden madde" ile tek tıkla eklenir. Seçenekli yazmak için köşeli parantez kullanın: <b>[Lake|Akrilik|Membran] kapak</b> yazarsanız teklifte açılır listeden seçilir.</div></div><button class="btn pri" data-act="libnew">+ Yeni madde</button></div>';
+  h += '<div class="toolbar"><input type="text" id="libq2" placeholder="Kütüphanede ara" value="'+esc(S.libQ)+'" aria-label="Kütüphanede ara"><div class="chips">'+["Tümü"].concat(libGroups()).map(g => '<button class="chip '+(S.libGrup===g?"on":"")+'" data-act="libgrup" data-v="'+esc(g)+'">'+esc(g)+'</button>').join("")+'</div></div>';
+  const items = libFiltered(S.libQ, S.libGrup);
+  if (!S.kutuphane.length) return h + '<div class="empty"><img src="'+MARK_DOC+'" alt=""><b>Kütüphane boş</b><span>İlk maddenizi ekleyin. Teklifte yazdığınız bir maddeyi ☆ düğmesiyle de buraya kaydedebilirsiniz.</span></div>';
+  h += '<div class="bolum libtable"><div class="maddeler">';
+  items.forEach(x => {
+    const L = "lib."+x.id+".";
+    h += '<div class="madde"><div class="mtext">'+inp(L+"grup", x.grup, {ph:"Grup (örn. Mutfak)", aria:"Grup"})+'</div><div class="mtext">'+inp(L+"baslik", x.baslik, {cls:"mtitle", ph:"Başlık", aria:"Başlık"})+'<textarea data-k="'+L+'aciklama" data-grow rows="2" aria-label="Açıklama">'+esc(x.aciklama)+'</textarea></div><div class="mprice" style="grid-template-columns:1fr 1fr">'+'<select data-k="'+L+'birim" aria-label="Birim">'+BIRIMLER.map(u => '<option'+(x.birim===u?" selected":"")+'>'+u+'</option>').join("")+'</select>'+inp(L+"birimFiyat", x.birimFiyat, {n:1, ph:"Birim fiyat", aria:"Birim fiyat"})+(S.showCost ? '<span class="cost">'+inp(L+"birimMaliyet", x.birimMaliyet, {n:1, ph:"Birim maliyet (iç)", aria:"Birim maliyet"})+'</span>' : "")+'</div><div class="mctl"><button class="icon del" data-act="libdel" data-id="'+x.id+'" aria-label="Maddeyi sil" title="Sil">✕</button></div></div>';
+  });
+  return h + '</div></div>';
+}
+
+/* ---------- ayarlar ---------- */
+function hfPrev(){ const f = S.ayar.firma; return '<div class="doc">'+docHead(f, "TEKLİF", [["Teklif no","ALT-2026-0001"],["Tarih",trDate(today())]])+'<p class="sub" style="color:#6b7480;text-align:center;margin:18px 0">… belge içeriği …</p>'+firmaFoot(f)+'</div>'; }
+function viewSettings(){
+  const f = S.ayar.firma, a = S.ayar.teklif;
+  const sf = (k, label, ph) => fld(label, '<input type="text" data-s="firma.'+k+'" value="'+esc(f[k])+'"'+(ph?' placeholder="'+esc(ph)+'"':"")+'>');
+  let h = '<div class="top"><div class="grow"><h1>Firma ve şablonlar</h1><div class="sub">Bu bilgiler bir kez girilir; tüm teklif ve sözleşmelerde kullanılır.</div></div></div><div class="ed-main">';
+  h += '<section class="card"><h2>Logo</h2><div style="display:flex;gap:24px;flex-wrap:wrap;align-items:center"><div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px 22px">'+logoHTML(false).replace('class="brandlogo"','class="brandlogo" style="color:#1c2733"')+'</div><div class="sub" style="max-width:420px">Altın "A", Altıntaş’ın baş harfidir; onu kesen kavis tasarımın ve ustalığın imzasıdır.</div></div></section>';
+  h += '<section class="card"><h2>Firma <small>Belgelerde ve sözleşmede kullanılır</small></h2><div class="grid">'+sf("ad","Firma adı (kısa)")+sf("unvan","Resmi unvan","Fatura ve sözleşmedeki tam unvan")+sf("slogan","Logo altı satırı","Boş bırakılabilir")+sf("yetkili","Yetkili (imza atan)")+sf("vergiDairesi","Vergi dairesi")+sf("vergiNo","Vergi / T.C. no")+sf("mahkeme","Yetkili mahkeme (şehir)","Örn. Ankara")+sf("garanti","İşçilik garantisi süresi")+'</div></section>';
+  h += '<section class="card"><h2>Adresler ve iletişim <small>Boş bırakılan alanlar belgede görünmez</small></h2><div class="grid">'+sf("showroomAdres","Showroom adresi")+sf("showroomTel","Showroom telefonu")+sf("fabrikaAdres","Fabrika adresi")+sf("gsm","GSM / WhatsApp")+sf("eposta","E-posta")+sf("web","Web sitesi")+sf("instagram","Instagram","@kullaniciadi")+sf("banka","Banka (yalnız sözleşmede)")+sf("iban","IBAN (yalnız sözleşmede)")+'</div></section>';
+  h += '<section class="card"><h2>Üst bilgi ve alt bilgi önizlemesi <small>PDF\'te alt bilgi ve sayfa numarası her sayfada tekrarlanır</small></h2><div class="hfprev">'+hfPrev()+'</div></section>';
+  h += '<section class="card"><h2>Yeni teklif varsayılanları</h2><div class="grid">'+fld("Geçerlilik (gün)", '<input type="text" inputmode="decimal" class="num" data-s="teklif.gecerlilik" data-n="1" value="'+esc(a.gecerlilik)+'">')+fld("KDV oranı", '<select data-s="teklif.kdv" data-n="1">'+[0,1,10,20].map(v => '<option value="'+v+'"'+(num(a.kdv)===v?" selected":"")+'>%'+v+'</option>').join("")+'</select>')+'</div>'+fld("Giriş metni", '<textarea data-s="teklif.giris" data-grow rows="2">'+esc(a.giris)+'</textarea>')+fld("Teklif koşulları (her satır bir koşul)", '<textarea data-s="teklif.kosullar" data-grow rows="4">'+esc(a.kosullar)+'</textarea>')+'</section>';
+  h += '<section class="card"><h2>Sözleşme maddeleri <small>Madde 1 (Taraflar) otomatik oluşur</small></h2><div class="hint">Metinde süslü parantezli alanlar sözleşmede otomatik dolar. Kendi sözleşme metninizi buraya yazabilirsiniz. Kullanılabilir alanlar: '+PLACEHOLDERS.map(p => '<code class="ph">'+p+'</code>').join(" ")+'</div><div>';
+  S.ayar.sozlesmeMaddeleri.forEach((m, i) => { h += '<div class="clause"><span class="cn">'+(i+2)+'</span><div class="cb"><input type="text" data-s="sozlesmeMaddeleri.'+i+'.baslik" value="'+esc(m.baslik)+'" style="font-weight:700" aria-label="Madde başlığı"><textarea data-s="sozlesmeMaddeleri.'+i+'.metin" data-grow rows="3" aria-label="Madde metni">'+esc(m.metin)+'</textarea></div><div class="mctl"><button class="icon" data-act="cup" data-i="'+i+'" aria-label="Yukarı">↑</button><button class="icon" data-act="cdown" data-i="'+i+'" aria-label="Aşağı">↓</button><button class="icon del" data-act="cdel" data-i="'+i+'" aria-label="Maddeyi sil">✕</button></div></div>'; });
+  h += '</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" data-act="cadd">+ Madde ekle</button><button class="btn sm ghost" data-act="creset">Varsayılan maddelere dön</button></div></section>';
+  h += '<section class="card"><h2>Yedek <small>Teklifler, kütüphane ve ayarlar tek dosyada</small></h2><div class="hint">Yedeği düzenli olarak indirip saklayın. Geri yüklemede aynı kayıtlar dosyadaki haliyle güncellenir, diğerleri silinmez.</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="backup">Yedek indir</button><label class="btn filebtn">Yedekten geri yükle<input type="file" id="restore" accept=".json,application/json"></label></div></section></div>';
+  return h;
+}
+
+/* ---------- dosya kaydetme ---------- */
+async function getDl(){ if (S.dl === undefined){ try { S.dl = window.claude && window.claude.use ? await window.claude.use("downloads") : null; } catch(e){ S.dl = null; } } return S.dl; }
+async function saveFile(filename, data){
+  const dl = await getDl(); if (!dl){ toast("Bu görünümde dosya indirme kullanılamıyor."); return; }
+  try { await dl.save({filename, data}); toast("Dosya kaydedildi"); }
+  catch(e){ const code = e && e.code; toast(code === "declined" ? "İndirme iptal edildi" : code === "rate_limited" ? "Bir indirme penceresi zaten açık" : "Dosya kaydedilemedi"); }
+}
+async function restoreFrom(file){
+  try {
+    const d = JSON.parse(await file.text());
+    if (!d || !Array.isArray(d.teklifler) || !Array.isArray(d.kutuphane)) { toast("Bu dosya bir Altıntaş yedeği değil"); return; }
+    setSave("Geri yükleniyor…");
+    for (const t of d.teklifler){ await store.put("teklifler", t); const i = S.teklifler.findIndex(x => x.id === t.id); if (i >= 0) S.teklifler[i] = t; else S.teklifler.push(t); }
+    for (const k of d.kutuphane){ await store.put("kutuphane", k); const i = S.kutuphane.findIndex(x => x.id === k.id); if (i >= 0) S.kutuphane[i] = k; else S.kutuphane.push(k); }
+    if (d.ayar){ S.ayar = mergeAyar(d.ayar); await store.put("ayarlar", Object.assign({id:"firma"}, S.ayar)); }
+    setSave("Kaydedildi"); render(); toast(d.teklifler.length + " teklif ve " + d.kutuphane.length + " madde geri yüklendi");
+  } catch(e){ toast("Yedek okunamadı"); }
+}
+
+/* ---------- PDF ---------- */
+function svgToPng(src, size){
+  return new Promise(res => { const im = new Image(); im.onload = () => { const c = document.createElement("canvas"); c.width = c.height = size; c.getContext("2d").drawImage(im, 0, 0, size, size); try { res(c.toDataURL("image/png")); } catch(e){ res(src); } }; im.onerror = () => res(src); im.src = src; });
+}
+async function makePdf(kind){
+  const t = cur(); const el = document.getElementById("docEl"); if (!el || !t) return;
+  if (!window.html2pdf){ toast("PDF aracı yüklenemedi. Sayfayı yenileyip tekrar deneyin."); return; }
+  await getDl();
+  if (!S.dl){ toast("Bu görünümde dosya indirme kullanılamıyor."); return; }
+  const name = (kind === "sozlesme" ? t.sozlesme.no + " Sozlesme " : t.no + " Rev" + t.rev + " Teklif ") + (t.musteri.ad || "") ;
+  const filename = name.trim().replace(/[\\/:*?"<>|]+/g, "") + ".pdf";
+  toast("PDF hazırlanıyor…");
+  if (window.altintasMasaustu){
+    try {
+      const clone = el.cloneNode(true); const inFoot = clone.querySelector(":scope > .d-foot"); if (inFoot) inFoot.remove();
+      const css = [...document.querySelectorAll("style")].map(s => s.textContent).join("\n");
+      const footCss = css.split("\n").filter(l => l.startsWith(".d-foot")).join("\n");
+      const r = await window.altintasMasaustu.pdf({filename, css, footCss, body:clone.outerHTML, foot:firmaFoot(S.ayar.firma, "pdf"), belge:el.dataset.runhead || ""});
+      toast(r === "saved" ? "PDF kaydedildi" : "İndirme iptal edildi");
+    } catch(e){ toast("PDF oluşturulamadı"); }
+    return;
+  }
+  const holders = [];
+  const offscreen = (node) => { const h = document.createElement("div"); h.style.cssText = "position:fixed;left:-10000px;top:0;width:703px;background:#fff"; h.appendChild(node); document.body.appendChild(h); holders.push(h); return node; };
+  const raster = async (root) => { for (const img of root.querySelectorAll("img")) { if (img.src.startsWith("data:image/svg")) img.src = await svgToPng(img.src, 240); } };
+  const snap = async (node) => { const c = await window.html2pdf().set({html2canvas:{scale:2, backgroundColor:"#ffffff"}, jsPDF:{unit:"mm", format:"a4"}, margin:0}).from(node).toCanvas().get("canvas"); return {url:c.toDataURL("image/png"), ratio:c.height / c.width}; };
+  try {
+    const f = S.ayar.firma;
+    const clone = offscreen(el.cloneNode(true)); clone.style.boxShadow = "none"; clone.style.margin = "0";
+    clone.style.padding = "0"; clone.style.width = "703px"; clone.style.borderRadius = "0";
+    const inFoot = clone.querySelector(":scope > .d-foot"); if (inFoot) inFoot.remove();
+    await raster(clone);
+    const footEl = document.createElement("div"); footEl.className = "doc"; footEl.style.cssText = "width:703px;padding:0;box-shadow:none;margin:0;border-radius:0"; footEl.innerHTML = firmaFoot(f, "pdf"); offscreen(footEl);
+    const headEl = document.createElement("div"); headEl.className = "doc"; headEl.style.cssText = "width:703px;padding:0;box-shadow:none;margin:0;border-radius:0"; headEl.innerHTML = '<div class="d-runhead">'+logoHTML(false)+'<span>'+esc(el.dataset.runhead || "")+'</span></div>'; offscreen(headEl); await raster(headEl);
+    const foot = await snap(footEl), head = await snap(headEl);
+    const W = 186, fh = Math.min(30, W * foot.ratio), hh = W * head.ratio;
+    const pdf = await window.html2pdf().set({margin:[10 + hh + 4, 12, 12 + fh + 6, 12], filename, image:{type:"jpeg", quality:0.95}, html2canvas:{scale:2, useCORS:true, backgroundColor:"#ffffff"}, jsPDF:{unit:"mm", format:"a4", orientation:"portrait"}, pagebreak:{mode:["css","legacy"], avoid:[".d-madde",".d-sum",".d-sign",".d-sec-h",".d-cl",".d-cond","tr"]}}).from(clone).toPdf().get("pdf");
+    const n = pdf.internal.getNumberOfPages();
+    for (let i = 1; i <= n; i++){
+      pdf.setPage(i);
+      if (i > 1) pdf.addImage(head.url, "PNG", 12, 10, W, hh);
+      pdf.addImage(foot.url, "PNG", 12, 297 - 12 - fh, W, fh);
+      pdf.setFontSize(8); pdf.setTextColor(120, 132, 136); pdf.text(i + " / " + n, 198, 297 - 6, {align:"right"});
+    }
+    const blob = pdf.output("blob");
+    holders.forEach(h => h.remove());
+    await S.dl.save({filename, data:blob});
+    toast("PDF kaydedildi");
+  } catch(e){
+    holders.forEach(h => h.remove());
+    const code = e && e.code;
+    toast(code === "declined" ? "İndirme iptal edildi" : code === "rate_limited" ? "Bir indirme penceresi zaten açık" : "PDF oluşturulamadı");
+  }
+}
+
+/* ---------- olaylar ---------- */
+const app = document.getElementById("app");
+app.addEventListener("click", async e => {
+  const el = e.target.closest("[data-act]"); if (!el) return;
+  const act = el.dataset.act, t = cur();
+  const bi = el.dataset.b != null ? +el.dataset.b : null, mi = el.dataset.m != null ? +el.dataset.m : null, ii = el.dataset.i != null ? +el.dataset.i : null;
+  const move = (arr, i, d) => { const j = i + d; if (j < 0 || j >= arr.length) return; [arr[i], arr[j]] = [arr[j], arr[i]]; };
+  switch(act){
+    case "go": S.view = el.dataset.v; S.libQ = ""; S.libGrup = "Tümü"; render(); window.scrollTo(0,0); return;
+    case "new": { const n = newTeklif(); S.teklifler.push(n); S.curId = n.id; S.view = "edit"; markDirty(n); render(); window.scrollTo(0,0); const i = document.querySelector('[data-k="musteri.ad"]'); if (i) i.focus(); return; }
+    case "open": S.curId = el.dataset.id; S.view = "edit"; render(); window.scrollTo(0,0); return;
+    case "opencontract": S.curId = el.dataset.id; S.view = "contract"; render(); window.scrollTo(0,0); return;
+    case "filter": S.filter = el.dataset.v; render(); return;
+    case "preview": S.view = "preview"; render(); window.scrollTo(0,0); return;
+    case "contract": ensureSz(t); markDirty(t); S.view = "contract"; render(); window.scrollTo(0,0); return;
+    case "approve": t.durum = "Onaylandı"; markDirty(t); render(); return;
+    case "gorunum": t.gorunum = el.dataset.v; markDirty(t); render(); return;
+    case "revize": { const n = clone(t); n.id = uid(); n.rev = Math.max(...S.teklifler.filter(x => x.no === t.no).map(x => x.rev)) + 1; n.durum = "Taslak"; n.sozlesme = null; n.tarih = today(); n.olusturma = new Date().toISOString(); S.teklifler.push(n); S.curId = n.id; markDirty(n); render(); toast("Rev."+n.rev+" oluşturuldu; Rev."+t.rev+" olduğu gibi saklanıyor"); return; }
+    case "tdel": {
+      if (el.dataset.confirm !== "1"){ el.dataset.confirm = "1"; el.textContent = "Silmeyi onaylayın"; setTimeout(() => { if (el.isConnected){ el.dataset.confirm = ""; el.textContent = "Bu sürümü sil"; } }, 4000); return; }
+      S.teklifler = S.teklifler.filter(x => x.id !== t.id); try { await store.del("teklifler", t.id); } catch(err){} S.view = "list"; render(); toast("Sürüm silindi"); return; }
+    case "badd": case "baddq": { const name = act === "baddq" ? el.dataset.v : (document.getElementById("newbolum").value || "").trim(); if (!name) { document.getElementById("newbolum").focus(); return; } t.bolumler.push({id:uid(), ad:name.toLocaleUpperCase("tr"), goturu:0, maddeler:[]}); markDirty(t); render(); return; }
+    case "bup": move(t.bolumler, bi, -1); markDirty(t); render(); return;
+    case "bdown": move(t.bolumler, bi, 1); markDirty(t); render(); return;
+    case "bdel": {
+      if (t.bolumler[bi].maddeler.length && el.dataset.confirm !== "1"){ el.dataset.confirm = "1"; el.textContent = "?"; el.title = "Bölüm ve maddeleri silinecek, onaylamak için tekrar tıklayın"; toast("Silmek için ✕ düğmesine bir kez daha tıklayın"); setTimeout(() => { if (el.isConnected){ el.dataset.confirm = ""; el.textContent = "✕"; } }, 4000); return; }
+      t.bolumler.splice(bi, 1); markDirty(t); render(); return; }
+    case "madd": t.bolumler[bi].maddeler.push({id:uid(), baslik:"", aciklama:"", not:"", miktar:1, birim:"gtr", birimFiyat:0}); markDirty(t); render(); { const ins = document.querySelectorAll('[data-k^="bolumler.'+bi+'.maddeler."][data-k$=".baslik"]'); if (ins.length) ins[ins.length-1].focus(); } return;
+    case "mup": move(t.bolumler[bi].maddeler, mi, -1); markDirty(t); render(); return;
+    case "mdown": move(t.bolumler[bi].maddeler, mi, 1); markDirty(t); render(); return;
+    case "mdel": t.bolumler[bi].maddeler.splice(mi, 1); markDirty(t); render(); return;
+    case "msave": { const m = t.bolumler[bi].maddeler[mi]; if (!m.baslik && !m.aciklama){ toast("Önce başlık veya açıklama yazın"); return; } const item = {id:uid(), grup:t.bolumler[bi].ad ? t.bolumler[bi].ad.charAt(0) + t.bolumler[bi].ad.slice(1).toLocaleLowerCase("tr") : "Diğer", baslik:m.baslik, aciklama:m.sablon || m.aciklama, birim:m.birim, birimFiyat:num(m.birimFiyat), birimMaliyet:num(m.birimMaliyet)}; S.kutuphane.push(item); try { await store.put("kutuphane", item); toast("Kütüphaneye kaydedildi"); } catch(err){ toast("Kaydedilemedi"); } render(); return; }
+    case "libopen": S.libTarget = bi; S.libQ = ""; const bn = (t.bolumler[bi].ad||"").toLocaleLowerCase("tr"); const gm = libGroups().find(g => g.toLocaleLowerCase("tr") === bn); S.libGrup = gm || "Tümü"; render(); { const q = document.getElementById("libq"); if (q) q.focus(); } return;
+    case "libclose": S.libTarget = null; render(); return;
+    case "libclose-bg": if (e.target === el){ S.libTarget = null; render(); } return;
+    case "libgrup": S.libGrup = el.dataset.v; render(); { const q = document.getElementById(S.libTarget != null ? "libq" : "libq2"); if (q) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); } } return;
+    case "libpick": { const x = S.kutuphane.find(k => k.id === el.dataset.id); const g = optGroups(x.aciklama); const md = {id:uid(), baslik:x.baslik||"", aciklama:x.aciklama||"", not:"", miktar:1, birim:x.birim||"gtr", birimFiyat:num(x.birimFiyat), birimMaliyet:num(x.birimMaliyet)}; if (g.length){ md.sablon = x.aciklama; md.secimler = g.map(o => o[0]); md.aciklama = fillOpts(md.sablon, md.secimler); } t.bolumler[S.libTarget].maddeler.push(md); markDirty(t); toast("Eklendi: " + (x.baslik || "madde")); S.libTarget = null; render(); return; }
+    case "libnew": { const item = {id:uid(), grup:S.libGrup !== "Tümü" ? S.libGrup : "", baslik:"", aciklama:"", birim:"gtr", birimFiyat:0}; S.kutuphane.unshift(item); S.libQ = ""; render(); saveLib(item); const f = document.querySelector('[data-k="lib.'+item.id+'.grup"]'); if (f) f.focus(); return; }
+    case "libdel": { const id = el.dataset.id; S.kutuphane = S.kutuphane.filter(x => x.id !== id); try { await store.del("kutuphane", id); } catch(err){} render(); return; }
+    case "kadd": { const v = (document.getElementById("newkosul").value || "").trim(); if (!v) return; t.kosullar.push({t:v, on:true}); markDirty(t); render(); return; }
+    case "kdel": e.preventDefault(); t.kosullar.splice(ii, 1); markDirty(t); render(); return;
+    case "oadd": t.odemePlani.push({oran:0, aciklama:""}); markDirty(t); render(); return;
+    case "odel": t.odemePlani.splice(ii, 1); markDirty(t); render(); return;
+    case "szoadd": t.sozlesme.odemeler.push({tarih:"", yontem:"Havale / EFT", tutar:0, aciklama:""}); markDirty(t); render(); return;
+    case "szodel": t.sozlesme.odemeler.splice(ii, 1); markDirty(t); render(); return;
+    case "szoreset": { const c = calc(t); t.sozlesme.odemeler = t.odemePlani.map(o => ({tarih:"", yontem:"Havale / EFT", tutar:Math.round(c.odemeBaz*num(o.oran)/100*100)/100, aciklama:o.aciklama})); markDirty(t); render(); return; }
+    case "pdf": makePdf(el.dataset.kind); return;
+    case "togglecost": S.showCost = !S.showCost; try { localStorage.setItem("altintas_showCost", S.showCost ? "1" : "0"); } catch(err){} render(); return;
+    case "copy": { const n = clone(t); n.id = uid(); n.no = nextNo("ALT", S.teklifler, x => x.no); n.rev = 1; n.durum = "Taslak"; n.sozlesme = null; n.tarih = today(); n.olusturma = new Date().toISOString(); n.musteri = {ad:"", telefon:"", eposta:"", adres:"", kimlikNo:""}; n.proje = {ad:t.proje.ad, adres:""}; S.teklifler.push(n); S.curId = n.id; markDirty(n); render(); window.scrollTo(0,0); toast(t.no+" kopyalandı: "+n.no+". Müşteri bilgilerini girin."); return; }
+    case "csv": {
+      const rows = [["Teklif no","Sürüm","Durum","Tarih","Müşteri","Telefon","E-posta","Proje","Proje adresi","Tutar (KDV hariç)","KDV","Tutar (KDV dahil)","Maliyet","Kâr","Kâr %","Sözleşme no"]];
+      latestRevs().forEach(x => { const c = calc(x); rows.push([x.no, x.rev, x.durum, trDate(x.tarih), x.musteri.ad, x.musteri.telefon, x.musteri.eposta, x.proje.ad, x.proje.adres, fmt.format(c.matrah), fmt.format(c.kdv), fmt.format(c.dahil), c.maliyet ? fmt.format(c.maliyet) : "", c.maliyet ? fmt.format(c.kar) : "", c.maliyet ? fmt.format(c.marj) : "", x.sozlesme && x.sozlesme.no || ""]); });
+      const csv = "\ufeff" + rows.map(r => r.map(v => { v = String(v ?? ""); return /[";\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(";")).join("\r\n");
+      saveFile("Teklifler " + today() + ".csv", csv); return; }
+    case "backup": saveFile("Altintas teklif yedegi " + today() + ".json", JSON.stringify({surum:1, tarih:new Date().toISOString(), teklifler:S.teklifler, kutuphane:S.kutuphane, ayar:S.ayar}, null, 1)); return;
+    case "cadd": S.ayar.sozlesmeMaddeleri.push({baslik:"Yeni madde", metin:""}); saveAyar(); render(); return;
+    case "cdel": S.ayar.sozlesmeMaddeleri.splice(ii, 1); saveAyar(); render(); return;
+    case "cup": move(S.ayar.sozlesmeMaddeleri, ii, -1); saveAyar(); render(); return;
+    case "cdown": move(S.ayar.sozlesmeMaddeleri, ii, 1); saveAyar(); render(); return;
+    case "creset": if (el.dataset.confirm !== "1"){ el.dataset.confirm = "1"; el.textContent = "Emin misiniz? Tekrar tıklayın"; return; } S.ayar.sozlesmeMaddeleri = clone(DEFAULT_MADDELER); saveAyar(); render(); return;
+  }
+});
+app.addEventListener("keydown", e => {
+  if (e.key === "Enter" && e.target.matches("tr[data-act]")) e.target.click();
+  if (e.key === "Enter" && e.target.id === "newbolum"){ e.preventDefault(); document.querySelector('[data-act="badd"]').click(); }
+  if (e.key === "Enter" && e.target.id === "newkosul"){ e.preventDefault(); document.querySelector('[data-act="kadd"]').click(); }
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape" && S.libTarget != null){ S.libTarget = null; render(); } });
+
+function onField(e){
+  const el = e.target;
+  if (el.id === "q"){ S.q = el.value; const pos = el.selectionStart; render(); const q = document.getElementById("q"); q.focus(); q.setSelectionRange(pos, pos); return; }
+  if (el.id === "libq" || el.id === "libq2"){ S.libQ = el.value; const pos = el.selectionStart, id = el.id; render(); const q = document.getElementById(id); if (q){ q.focus(); q.setSelectionRange(pos, pos); } return; }
+  if (el.dataset.grow != null){ el.style.height = "auto"; el.style.height = (el.scrollHeight + 2) + "px"; }
+  const val = el.type === "checkbox" ? el.checked : (el.dataset.n ? num(el.value) : el.value);
+  if (el.dataset.s){ setPath(S.ayar, el.dataset.s, val); saveAyar(); const hp = document.querySelector(".hfprev"); if (hp) hp.innerHTML = hfPrev(); return; }
+  const k = el.dataset.k; if (!k) return;
+  if (k.startsWith("lib.")){ const [, id, key] = k.split("."); const item = S.kutuphane.find(x => x.id === id); if (item){ item[key] = val; saveLib(item); } return; }
+  const t = cur(); if (!t) return;
+  setPath(t, k, val);
+  const sm = k.match(/^bolumler\.(\d+)\.maddeler\.(\d+)\.(secimler|aciklama)/);
+  if (sm){ const m = t.bolumler[+sm[1]].maddeler[+sm[2]];
+    if (sm[3] === "secimler"){ m.aciklama = fillOpts(m.sablon, m.secimler); markDirty(t); render(); return; }
+    if (m.sablon){ delete m.sablon; delete m.secimler; markDirty(t); const o = el.closest(".mtext"); const op = o && o.querySelector(".opts"); if (op) op.remove(); updateCalc(); return; } }
+  markDirty(t);
+  if (k === "durum" || k === "kdvGoster" || k === "kdvOran" || (S.view === "contract" && e.type === "change")) { render(); return; }
+  updateCalc();
+}
+app.addEventListener("input", e => { if (e.target.matches("select,input[type=checkbox],input[type=date]")) return; onField(e); });
+app.addEventListener("change", e => {
+  if (e.target.id === "restore"){ const fl = e.target.files && e.target.files[0]; if (fl) restoreFrom(fl); e.target.value = ""; return; } if (e.target.matches("select,input[type=checkbox],input[type=date]")) onField(e); else if (S.view === "contract" && e.target.dataset.k) render(); });
+
+/* ---------- açılış ---------- */
+(async function boot(){
+  render();
+  await store.init();
+  try {
+    const [t, k, a] = await Promise.all([store.list("teklifler"), store.list("kutuphane"), store.list("ayarlar")]);
+    S.teklifler = t; S.kutuphane = k; S.ayar = mergeAyar(a.find(x => x.id === "firma"));
+    S.teklifler.forEach(x => { x.bolumler = x.bolumler || []; x.kosullar = x.kosullar || []; x.odemePlani = x.odemePlani || []; x.musteri = x.musteri || {}; x.proje = x.proje || {}; });
+  } catch(e){ toast("Veriler yüklenemedi. Sayfayı yenileyin."); }
+  S.loaded = true; render();
+})();
+})();
+</script>
+
+</body></html>
