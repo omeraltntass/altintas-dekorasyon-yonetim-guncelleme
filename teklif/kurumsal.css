@@ -1,0 +1,30 @@
+/* Altıntaş Dekorasyon Yönetim: teklif ve sözleşme belgeleri, ekstre ve raporlarla aynı kurumsal dilde.
+   Teklif programının kendi stillerinin üzerine yüklenir (scripts/teklif-hazirla.mjs ekler). */
+.doc { position: relative; padding-top: 50px }
+.doc::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 6px; background: linear-gradient(90deg, #1c2733 0 70%, #b08326 70% 100%) }
+.d-type .t { font: 700 23px/1.1 Montserrat, sans-serif !important; letter-spacing: .08em; text-transform: uppercase }
+.d-type dt { color: #6b7480 }
+.d-rule { height: 0; background: none; margin: 18px 0 0 }
+.d-parties { gap: 0; border-top: 1px solid #e3e6ea; border-bottom: 1px solid #e3e6ea }
+.d-parties > div { padding: 16px 0 }
+.d-parties > div + div { border-left: 1px solid #e3e6ea; padding-left: 26px }
+.d-parties small, .d-cond h4, .d-foot .col small, .d-contact b { font-family: Montserrat, sans-serif; font-weight: 600; letter-spacing: .18em; color: #b08326 }
+.d-parties b { font: 700 15px/1.3 Montserrat, sans-serif; color: #1c2733; margin-bottom: 2px }
+.d-sec-n { color: #b08326 }
+.d-sec-h { border-bottom: 1.5px solid #1c2733 }
+.d-sec-h h3 { font: 700 11px Montserrat, sans-serif; letter-spacing: .16em }
+.d-madde { border-bottom: 1px solid #e3e6ea }
+.d-sum { background: #1c2733; border: 0; border-radius: 10px; padding: 18px 20px; color: #fff; width: 340px; -webkit-print-color-adjust: exact; print-color-adjust: exact }
+.d-sum .l span:first-child { color: #c9d0d8 }
+.d-sum .l span:last-child { color: #fff }
+.d-sum .g { border-top: 1px solid rgba(255, 255, 255, .18); color: #fff }
+.d-sum .g span:first-child { color: #d9b25f; font: 600 9.5px Montserrat, sans-serif; letter-spacing: .16em }
+.d-sum .g span:last-child { font: 700 19px Montserrat, sans-serif; color: #fff }
+.d-sum .yz { color: #c9d0d8 }
+.d-cond td { border-bottom: 1px solid #e3e6ea }
+.d-sign div { border-top: 1px solid #1c232b }
+.d-foot { border-top: 1px solid #e3e6ea }
+.d-foot::before { display: none }
+.d-foot .legal { border-top: 0 }
+.d-title h2 { font: 700 19px Montserrat, sans-serif !important; letter-spacing: .06em; text-transform: uppercase }
+.d-runhead { border-bottom: 1px solid #e3e6ea }
